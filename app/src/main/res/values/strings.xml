@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">简易音乐</string>
+    <string name="title_LocalMusic">本地音乐</string>
+    <string name="title_NowPlaying">正在播放</string>
+    <string name="title_Playlist">播放列表</string>
+    <string name="music_channel">音乐</string>
+    <string name="default_time" translatable="false">0:00</string>
+    <string name="permissionHint">请授予存储权限，否则应用将无法访问本地音乐。</string>
+    <string name="authorize">授予</string>
+    <string name="guaranteeHint">请在“权限”页面允许本应用访问“媒体和文件”。</string>
+    <string name="exit">退出</string>
+    <string name="menu_search">搜索</string>
+    <string name="menu_settings">设置</string>
+    <string name="queryHint">歌曲名或歌手名</string>
+    <string name="equalizer">均衡器</string>
+    <string name="use_preset">使用预设值</string>
+    <string name="reset">重设</string>
+</resources>

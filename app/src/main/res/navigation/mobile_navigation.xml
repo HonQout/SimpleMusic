@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/navigation_LocalMusic">
+
+    <fragment
+        android:id="@+id/navigation_LocalMusic"
+        android:name="com.android.simplemusic.ui.localmusic.LocalMusicFragment"
+        android:label="@string/title_LocalMusic"
+        tools:layout="@layout/fragment_localmusic" />
+
+    <fragment
+        android:id="@+id/navigation_NowPlaying"
+        android:name="com.android.simplemusic.ui.nowplaying.NowPlayingFragment"
+        android:label="@string/title_NowPlaying"
+        tools:layout="@layout/fragment_nowplaying" />
+
+    <fragment
+        android:id="@+id/navigation_Playlist"
+        android:name="com.android.simplemusic.ui.playlist.PlaylistFragment"
+        android:label="@string/title_Playlist"
+        tools:layout="@layout/fragment_playlist" />
+</navigation>

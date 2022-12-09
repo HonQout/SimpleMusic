@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Simple Music</string>
+    <string name="title_LocalMusic">Local Music</string>
+    <string name="title_NowPlaying">Now Playing</string>
+    <string name="title_Playlist">Playlist</string>
+    <string name="music_channel">Music</string>
+    <string name="permissionHint">Please grant permission to storage, otherwise this application cannot access storage.</string>
+    <string name="authorize">Grant</string>
+    <string name="exit">Exit</string>
+    <string name="guaranteeHint">Please grant permission \"Media and File\" in \"Permission\" page.</string>
+    <string name="menu_search">Search</string>
+    <string name="menu_settings">Settings</string>
+    <string name="queryHint">Song name or singer name</string>
+    <string name="equalizer">Equalizer</string>
+    <string name="use_preset">Use preset</string>
+    <string name="reset">Reset</string>
+</resources>
