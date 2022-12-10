@@ -15,4 +15,8 @@
     <string name="equalizer">Equalizer</string>
     <string name="use_preset">Use preset</string>
     <string name="reset">Reset</string>
+    <string name="not_playing">Not Playing</string>
+    <string name="action_prev">Previous Music</string>
+    <string name="action_next">Next Music</string>
+    <string name="action_play">Play</string>
 </resources>

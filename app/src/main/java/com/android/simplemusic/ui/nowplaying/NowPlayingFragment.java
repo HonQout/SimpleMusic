@@ -1,7 +1,12 @@
 package com.android.simplemusic.ui.nowplaying;
 
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,8 +20,8 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.android.simplemusic.Data;
 import com.android.simplemusic.Music;
+import com.android.simplemusic.MusicService;
 import com.android.simplemusic.MusicUtils;
 import com.android.simplemusic.R;
 import com.android.simplemusic.databinding.FragmentNowplayingBinding;
@@ -24,10 +29,9 @@ import com.android.simplemusic.databinding.FragmentNowplayingBinding;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener {
+public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener, ServiceConnection {
 
     private FragmentNowplayingBinding binding;
-    private Data app;
     private TextView NP_songName;
     private TextView NP_songSinger;
     private TextView NP_cTime;
@@ -38,15 +42,22 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     private ImageButton NP_next;
     private Timer timer;
     private Music prevMusic;
+    private MusicService.MusicBinder musicBinder;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Intent intent = new Intent(requireActivity().getApplicationContext(), MusicService.class);
+        requireActivity().getApplicationContext().bindService(intent, this, Context.BIND_AUTO_CREATE);
+    }
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         NowPlayingViewModel nowPlayingViewModel =
                 new ViewModelProvider(this).get(NowPlayingViewModel.class);
-
         binding = FragmentNowplayingBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
-        app = (Data) requireActivity().getApplication();
+        // 初始化控件
         NP_songName = root.findViewById(R.id.NP_songName);
         NP_songSinger = root.findViewById(R.id.NP_songSinger);
         NP_cTime = root.findViewById(R.id.NP_cTime);
@@ -57,18 +68,20 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         NP_next = root.findViewById(R.id.NP_next);
         timer = new Timer();
         NP_seekbar.setOnSeekBarChangeListener(this);
-        timer.schedule(new MyTask(), 0, 1000);
+        timer.schedule(new MyTask(), 0, 200);
         NP_play.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("UseCompatLoadingForDrawables")
             public void onClick(View view) {
-                if (app.mediaPlayer.isPlaying()) {
-                    app.mediaPlayer.pause();
-                    NP_play.setImageDrawable(requireActivity().getDrawable(R.drawable.play_black));
-                    NP_play.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                } else {
-                    app.mediaPlayer.start();
-                    NP_play.setImageDrawable(requireActivity().getDrawable(R.drawable.pause_black));
-                    NP_play.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                if (musicBinder.getCurrentMusic() != null) {
+                    if (musicBinder.isPlaying()) {
+                        musicBinder.Pause();
+                        NP_play.setImageDrawable(requireActivity().getDrawable(R.drawable.play_black));
+                        NP_play.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                    } else {
+                        musicBinder.Play();
+                        NP_play.setImageDrawable(requireActivity().getDrawable(R.drawable.pause_black));
+                        NP_play.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                    }
                 }
             }
         });
@@ -81,36 +94,41 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         binding = null;
     }
 
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        musicBinder = (MusicService.MusicBinder) service;
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+        musicBinder = null;
+    }
+
     class MyTask extends TimerTask {
         @SuppressLint({"UseCompatLoadingForDrawables", "SetTextI18n"})
         @Override
         public void run() {
-            if (app.curMusic != null && app.mediaPlayer != null) {
-                if (prevMusic == null || prevMusic != app.curMusic) {
-                    String songName = app.curMusic.getName();
-                    String songSinger = app.curMusic.getSinger();
-                    int totalTime = app.mediaPlayer.getDuration();
-                    NP_songName.setText(songName);
-                    NP_songSinger.setText(songSinger);
-                    NP_tTime.setText(MusicUtils.formatTime(totalTime));
-                    NP_seekbar.setMax(totalTime);
-                    prevMusic = app.curMusic;
-                    if (isAdded() && app.mediaPlayer.isPlaying()) {
-                        NP_play.setImageDrawable(requireActivity().getDrawable(R.drawable.pause_black));
+            if (musicBinder != null) {
+                Music temp_music = musicBinder.getCurrentMusic();
+                if (temp_music != null) {
+                    if (prevMusic == null || prevMusic != temp_music) {
+                        NP_songName.setText(temp_music.getName());
+                        NP_songSinger.setText(temp_music.getSinger());
+                        NP_tTime.setText(MusicUtils.formatTime(temp_music.getDuration()));
+                        NP_seekbar.setMax(temp_music.getDuration());
+                        prevMusic = temp_music;
+                    }
+                    if (isAdded()) {
+                        if (musicBinder.isPlaying()) {
+                            NP_play.setImageDrawable(requireActivity().getDrawable(R.drawable.pause_black));
+                        } else {
+                            NP_play.setImageDrawable(requireActivity().getDrawable(R.drawable.play_black));
+                        }
                     }
                     NP_play.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                }
-                int currentTime = app.mediaPlayer.getCurrentPosition();
-                if (NP_seekbar.getProgress() == app.mediaPlayer.getDuration()) {
-                    NP_cTime.setText("0:00");
-                    NP_seekbar.setProgress(0);
-                    app.mediaPlayer.seekTo(0);
-                    if (isAdded() && !app.mediaPlayer.isPlaying()) {
-                        NP_play.setImageDrawable(requireActivity().getDrawable(R.drawable.play_black));
-                    }
-                } else {
-                    NP_cTime.setText(MusicUtils.formatTime(currentTime));
-                    NP_seekbar.setProgress(currentTime);
+                    int currentPosition = musicBinder.getCurrentPosition();
+                    NP_cTime.setText(MusicUtils.formatTime(currentPosition));
+                    NP_seekbar.setProgress(currentPosition);
                 }
             }
         }
@@ -119,8 +137,8 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         Log.i(getString(R.string.title_NowPlaying), "progress:" + progress + ",fromUser:" + fromUser);
-        if (fromUser && app.mediaPlayer != null) {
-            app.mediaPlayer.seekTo(progress);
+        if (fromUser && musicBinder.getCurrentMusic() != null) {
+            musicBinder.setPosition(progress);
         }
     }
 

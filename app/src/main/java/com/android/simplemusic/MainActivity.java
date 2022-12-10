@@ -3,14 +3,17 @@ package com.android.simplemusic;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.NotificationManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,13 +36,16 @@ import com.android.simplemusic.databinding.ActivityMainBinding;
 public class MainActivity extends AppCompatActivity {
 
     private int UiMode;
-    private static final int NOTIFICATION_ID = 1;
+    private static final int NOTIFICATION_ID = 1024;
     private static final int REQUEST_CODE = 1024;
     private Data app;
 
     private ActivityMainBinding binding;
     private Toolbar toolbar1;
     private MenuItem menu_settings;
+    private ServiceConnection serviceConnection;
+    private MusicService.MusicBinder musicBinder;
+    private Intent intent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +76,17 @@ public class MainActivity extends AppCompatActivity {
         if (app.nManager == null) {
             app.nManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         }
+        serviceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                musicBinder = (MusicService.MusicBinder) service;
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+
+            }
+        };
         // 判断权限获取情况
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
                 || ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
@@ -138,6 +155,17 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    // 定义接受Intent时启动的Fragment
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        int position;
+        if (intent != null) {
+            position = intent.getIntExtra("position", 0);
+            // TODO: 切换Fragment为正在播放
+        }
     }
 
     // 定义销毁活动的动作

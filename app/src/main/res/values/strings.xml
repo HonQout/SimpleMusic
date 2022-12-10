@@ -15,4 +15,8 @@
     <string name="equalizer">均衡器</string>
     <string name="use_preset">使用预设值</string>
     <string name="reset">重设</string>
+    <string name="not_playing">未在播放</string>
+    <string name="action_prev">上一曲</string>
+    <string name="action_play">播放</string>
+    <string name="action_next">下一曲</string>
 </resources>
