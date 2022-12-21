@@ -2,7 +2,6 @@ package com.android.simplemusic;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -10,10 +9,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,8 +25,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
@@ -38,55 +38,59 @@ public class MainActivity extends AppCompatActivity {
     private int UiMode;
     private static final int NOTIFICATION_ID = 1024;
     private static final int REQUEST_CODE = 1024;
-    private Data app;
-
+    private static final String TAG = "MainActivity";
     private ActivityMainBinding binding;
-    private Toolbar toolbar1;
+    private Toolbar toolbar_main;
     private MenuItem menu_settings;
-    private ServiceConnection serviceConnection;
+    private BottomNavigationView nav_view;
+    private NavHostFragment navHostFragment;
+    private NavController navController;
     private MusicService.MusicBinder musicBinder;
-    private Intent intent;
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            musicBinder = (MusicService.MusicBinder) service;
+            Log.i(TAG, "Connected to Music Service");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // 获取绑定
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        // 设置系统UI可见性
         UiMode = getApplicationContext().getResources().getConfiguration().uiMode;
         if ((UiMode & Configuration.UI_MODE_NIGHT_MASK) != Configuration.UI_MODE_NIGHT_YES) {
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
-        toolbar1 = (Toolbar) findViewById(R.id.toolbar1);
-        toolbar1.setTitle("");
-        setSupportActionBar(toolbar1);
+        // 初始化Toolbar
+        toolbar_main = (Toolbar) findViewById(R.id.toolbar1);
+        toolbar_main.setTitle("");
+        setSupportActionBar(toolbar_main);
+        // 初始化菜单-设置
         menu_settings = (MenuItem) findViewById(R.id.menu_settings);
-        BottomNavigationView navView = findViewById(R.id.nav_view);
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
+        // 初始化NavView
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.navigation_LocalMusic, R.id.navigation_NowPlaying, R.id.navigation_Playlist)
                 .build();
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
+        // 初始化NavHostFragment
+        navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.navHostFragment);
+        assert navHostFragment != null;
+        navController = navHostFragment.getNavController();
+        navController.getNavigatorProvider().addNavigator(new CustomNavigator(this, getSupportFragmentManager(), R.id.navHostFragment));
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-        NavigationUI.setupWithNavController(binding.navView, navController);
-        app = (Data) getApplication();
-        if (app.mediaPlayer == null) {
-            app.mediaPlayer = new MediaPlayer();
-        }
-        if (app.nManager == null) {
-            app.nManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        }
-        serviceConnection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                musicBinder = (MusicService.MusicBinder) service;
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-
-            }
-        };
+        NavigationUI.setupWithNavController(binding.bottomNavigationView, navController);
+        Intent intent = new Intent(MainActivity.this, MusicService.class);
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        Log.i(TAG, "Bound to Music Service");
         // 判断权限获取情况
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
                 || ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
@@ -125,6 +129,11 @@ public class MainActivity extends AppCompatActivity {
                 ad.setCancelable(false);
                 ad.create();
                 ad.show();
+            } else {
+                Intent intent_pa = new Intent("com.android.simplemusic.PERMISSION_ACQUIRED");
+                intent_pa.setPackage(getPackageName());
+                Log.i(TAG, "sent message to remind musicList in LocalMusic Fragment to update data");
+                LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(intent_pa);
             }
         }
     }
@@ -168,16 +177,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // 定义保存状态的方法
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        Log.i(TAG, "onSaveInstanceState");
+        super.onSaveInstanceState(outState);
+    }
+
     // 定义销毁活动的动作
     @Override
     public void onDestroy() {
+        Log.i(TAG, "onDestroy");
         super.onDestroy();
-        if (app.mediaPlayer != null) {
-            app.mediaPlayer.stop();
-            app.mediaPlayer.release();
-        }
-        if (app.nManager != null) {
-            app.nManager.cancel(NOTIFICATION_ID);
-        }
     }
 }

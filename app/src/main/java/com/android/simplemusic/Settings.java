@@ -58,11 +58,6 @@ public class Settings extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 switch (position) {
-                    case 0: // 均衡器
-                        Intent intent_eq = new Intent();
-                        intent_eq.setClass(Settings.this, EqualizerSetting.class);
-                        startActivity(intent_eq);
-                        break;
                     default:
                         break;
                 }
