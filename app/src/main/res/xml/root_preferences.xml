@@ -1,0 +1,53 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="@string/user_interface">
+        <ListPreference
+            app:entries="@array/theme_color_entries"
+            app:entryValues="@array/theme_color_values"
+            app:icon="@drawable/color_lens_black"
+            app:key="theme_color"
+            app:title="@string/theme_color"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference
+            app:entries="@array/night_mode_entries"
+            app:entryValues="@array/night_mode_values"
+            app:icon="@drawable/nights_stay_black"
+            app:key="night_mode"
+            app:title="@string/night_mode"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/audio_and_play">
+        <SeekBarPreference
+            android:max="60"
+            app:adjustable="true"
+            app:defaultValue="0"
+            app:icon="@drawable/search_black"
+            app:key="filter_short_audio"
+            app:min="0"
+            app:seekBarIncrement="1"
+            app:showSeekBarValue="true"
+            app:title="@string/filter_short_audio" />
+        <SwitchPreferenceCompat
+            app:icon="@drawable/sync_black"
+            app:key="play_synchronously"
+            app:title="@string/play_synchronously" />
+        <Preference
+            app:icon="@drawable/equalizer_black"
+            app:key="equalizer"
+            app:title="@string/equalizer" />
+        <Preference
+            app:icon="@drawable/speaker_black"
+            app:key="system_sound_settings"
+            app:title="@string/system_sound_settings" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/about">
+        <Preference
+            app:icon="@drawable/info_black"
+            app:key="about"
+            app:title="@string/about_this_app" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

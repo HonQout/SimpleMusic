@@ -12,12 +12,6 @@
         tools:layout="@layout/fragment_localmusic" />
 
     <fragment
-        android:id="@+id/navigation_NowPlaying"
-        android:name="com.android.simplemusic.ui.nowplaying.NowPlayingFragment"
-        android:label="@string/title_NowPlaying"
-        tools:layout="@layout/fragment_nowplaying" />
-
-    <fragment
         android:id="@+id/navigation_Playlist"
         android:name="com.android.simplemusic.ui.playlist.PlaylistFragment"
         android:label="@string/title_Playlist"

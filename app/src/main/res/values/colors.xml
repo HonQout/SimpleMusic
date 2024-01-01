@@ -8,6 +8,7 @@
     <color name="yellow">#FFFFFF00</color>
     <color name="purple">#FFFF00FF</color>
     <color name="light_blue">#FF00FFFF</color>
+    <color name="light_grey">#FFEEEFF3</color>
     <color name="toolbar_background">#FFFFFFFF</color>
     <color name="text">#FF000000</color>
 </resources>

@@ -3,17 +3,12 @@
 
     <item
         android:id="@+id/navigation_LocalMusic"
-        android:icon="@drawable/library_music_black"
+        android:icon="@drawable/music_note_black"
         android:title="@string/title_LocalMusic" />
 
     <item
-        android:id="@+id/navigation_NowPlaying"
-        android:icon="@drawable/play_circle_black"
-        android:title="@string/title_NowPlaying" />
-
-    <item
         android:id="@+id/navigation_Playlist"
-        android:icon="@drawable/list_black"
+        android:icon="@drawable/library_music_black"
         android:title="@string/title_Playlist" />
 
 </menu>

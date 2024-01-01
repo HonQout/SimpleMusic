@@ -6,7 +6,7 @@
     android:layout_height="match_parent">
 
     <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar1"
+        android:id="@+id/toolbarMain"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -18,10 +18,17 @@
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/bottomNavigationView"
-        android:layout_below="@+id/toolbar1"
+        android:layout_below="@+id/toolbarMain"
+        android:layout_above="@+id/dockBar"
+        android:layout_marginTop="0dp"
         app:defaultNavHost="true"
         app:navGraph="@navigation/mobile_navigation" />
+
+    <com.android.simplemusic.view.DockBar
+        android:id="@+id/dockBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/bottomNavigationView" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"

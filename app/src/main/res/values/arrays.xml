@@ -1,0 +1,35 @@
+<resources>
+    <!-- Theme_Color Preference -->
+    <string-array name="theme_color_entries">
+        <item>@string/red</item>
+        <item>@string/green</item>
+        <item>@string/dark_blue</item>
+        <item>@string/yellow</item>
+        <item>@string/purple</item>
+        <item>@string/light_blue</item>
+        <item>@string/black</item>
+    </string-array>
+
+    <string-array name="theme_color_values">
+        <item>red</item>
+        <item>green</item>
+        <item>dark_blue</item>
+        <item>yellow</item>
+        <item>purple</item>
+        <item>light_blue</item>
+        <item>black</item>
+    </string-array>
+
+    <!-- Night_Mode Preference -->
+    <string-array name="night_mode_entries">
+        <item>@string/on</item>
+        <item>@string/off</item>
+        <item>@string/follow_system</item>
+    </string-array>
+
+    <string-array name="night_mode_values">
+        <item>on</item>
+        <item>off</item>
+        <item>follow_system</item>
+    </string-array>
+</resources>
