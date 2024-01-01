@@ -2,7 +2,6 @@ package com.android.simplemusic.activity;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.content.res.AppCompatResources;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.content.ComponentName;
@@ -44,7 +43,6 @@ import java.util.TimerTask;
 
 public class PlayingActivity extends AppCompatActivity {
     private static final String TAG = "PlayingActivity";
-    private static final int REQUEST_CODE = 1024;
     private ActivityPlayingBinding binding;
     private int UiMode;
     private boolean shouldUpdateProgress = true;
@@ -178,10 +176,8 @@ public class PlayingActivity extends AppCompatActivity {
                     textView1.setText(String.format(Locale.US, "%ddB", minEqualizer / 100));
                     textView2.setText(String.format(Locale.US, "%dHz", musicService.getCenterFreq(band) / 1000));
                     textView3.setText(String.format(Locale.US, "%ddB", maxEqualizer / 100));
-                    seekBar.setProgressDrawable(AppCompatResources.getDrawable(PlayingActivity.this, R.drawable.seekbar_progress));
-                    seekBar.setThumb(AppCompatResources.getDrawable(PlayingActivity.this, R.drawable.progress_thumb));
                     seekBar.setMax((int) (maxEqualizer - minEqualizer));
-                    Log.i("Equalizer", "band " + String.valueOf((int) band) + " is " + String.valueOf((int) musicService.getBandLevel(band)));
+                    Log.i("Equalizer", String.format("band %d is %d", (int) band, (int) musicService.getBandLevel(band)));
                     seekBar.setProgress(musicService.getBandLevel(band) - minEqualizer);
                     seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                         public void onStopTrackingTouch(SeekBar seekBar) {
@@ -194,7 +190,7 @@ public class PlayingActivity extends AppCompatActivity {
 
                         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                             if (fromUser) {
-                                Log.i("Equalizer", "set band " + String.valueOf((int) band) + " to " + String.valueOf((int) progress) + "+" + String.valueOf((int) minEqualizer));
+                                Log.i("Equalizer", String.format("set band %d to %d + %d", (int) band, (int) progress, (int) minEqualizer));
                                 musicService.setBandLevel(band, (short) (progress + minEqualizer));
                             }
                         }
@@ -205,12 +201,12 @@ public class PlayingActivity extends AppCompatActivity {
                 spinner_ps.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                     @Override
                     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                        Log.i(TAG, "Selected preset item " + String.valueOf(position));
+                        Log.i(TAG, String.format("Selected preset item %d", position));
                         musicService.usePreset((short) position);
                         for (short i = 0; i < musicService.getNumBands(); i++) {
                             seekBars.get((int) i).setProgress(musicService.getBandLevel(i) - minEqualizer);
                         }
-                        Log.i(TAG, "Not first use, set preset " + String.valueOf(position));
+                        Log.i(TAG, String.format("Not first use, set preset %d", position));
                     }
 
                     @Override
@@ -229,7 +225,7 @@ public class PlayingActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         musicService.resetEqSet();
-                        Log.i("Equalizer", "Number of presets is " + String.valueOf((int) musicService.getNumPresets()));
+                        Log.i("Equalizer", String.format("Number of presets is %d", (int) musicService.getNumPresets()));
                         for (short i = 0; i < musicService.getNumBands(); i++) {
                             seekBars.get((int) i).setProgress(musicService.getBandLevel(i) - minEqualizer);
                         }
@@ -241,7 +237,7 @@ public class PlayingActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         musicService.resetEqSet();
-                        Log.i("Equalizer", "Number of presets is " + String.valueOf((int) musicService.getNumPresets()));
+                        Log.i("Equalizer", String.format("Number of presets is %d", (int) musicService.getNumPresets()));
                         for (short i = 0; i < musicService.getNumBands(); i++) {
                             seekBars.get((int) i).setProgress(musicService.getBandLevel(i) - minEqualizer);
                         }

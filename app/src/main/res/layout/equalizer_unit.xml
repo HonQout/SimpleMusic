@@ -41,7 +41,10 @@
         android:id="@+id/equalizer_unit_seekbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxHeight="10dp"
-        android:minHeight="10dp" />
+        android:maxHeight="8dp"
+        android:minHeight="8dp"
+        android:progressDrawable="@drawable/seekbar_progress"
+        android:thumb="@drawable/progress_thumb"
+        android:thumbOffset="0dp" />
 
 </LinearLayout>
