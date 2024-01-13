@@ -1,7 +1,7 @@
 package com.android.simplemusic.bean;
 
 public class Music {
-    private String title; //标题
+    private String title; //名称
     private String artist; //艺术家
     private String path; //路径
     private int duration; //时长

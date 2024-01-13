@@ -40,7 +40,7 @@ public class MusicService extends Service {
     private static final int NOTIFICATION_ID = 1024;
 
     private String currentState;
-    private Music currentMusic;
+    private Music currentMusic = null;
     private MediaPlayer mediaPlayer;
     private final MusicBinder mBinder = new MusicBinder();
     private Equalizer equalizer;

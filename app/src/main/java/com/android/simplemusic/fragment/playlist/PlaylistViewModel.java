@@ -1,4 +1,4 @@
-package com.android.simplemusic.ui.playlist;
+package com.android.simplemusic.fragment.playlist;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;

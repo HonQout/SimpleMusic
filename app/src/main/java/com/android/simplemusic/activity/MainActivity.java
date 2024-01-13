@@ -292,8 +292,11 @@ public class MainActivity extends AppCompatActivity {
             case Definition.SERVICE_CONNECTED:
                 Log.i(TAG, "Received Message SERVICE_CONNECTED");
                 if (messageEvent.getContent().equals("MainActivity")) {
-                    dockBar.setTextView1Text(musicBinder.getService().getCurrentMusic().getTitle());
-                    dockBar.setTextView2Text(musicBinder.getService().getCurrentMusic().getArtist());
+                    Music currentMusic = musicBinder.getService().getCurrentMusic();
+                    if (currentMusic != null) {
+                        dockBar.setTextView1Text(currentMusic.getTitle());
+                        dockBar.setTextView2Text(currentMusic.getArtist());
+                    }
                 }
                 if (musicBinder.getService().isPlaying()) {
                     dockBar.setImageButton2Drawable(ResourcesCompat.getDrawable(getResources(), R.drawable.pause_black, null));

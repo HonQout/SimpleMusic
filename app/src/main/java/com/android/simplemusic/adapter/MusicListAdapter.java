@@ -97,9 +97,10 @@ public class MusicListAdapter extends ArrayAdapter<Music> implements Filterable 
             if (TextUtils.isEmpty(charSequence)) {
                 list = musicList_bak;
             } else {
+                charSequence = charSequence.toString().toLowerCase();
                 list = new ArrayList<Music>();
                 for (Music item : musicList_bak) {
-                    if (item.getTitle().contains(charSequence) || item.getArtist().contains(charSequence)) {
+                    if (item.getTitle().toLowerCase().contains(charSequence) || item.getArtist().toLowerCase().contains(charSequence)) {
                         list.add(item);
                     }
                 }

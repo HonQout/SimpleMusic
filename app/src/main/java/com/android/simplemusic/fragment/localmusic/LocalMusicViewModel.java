@@ -1,11 +1,6 @@
-package com.android.simplemusic.ui.localmusic;
+package com.android.simplemusic.fragment.localmusic;
 
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
-
-
-import java.util.ArrayList;
 
 public class LocalMusicViewModel extends ViewModel {
 

@@ -297,23 +297,33 @@ public class PlayingActivity extends AppCompatActivity {
                 if (messageEvent.getContent().equals("PlayingActivity")) {
                     if (musicService.getCurrentMusic() != null) {
                         Music currentMusic = musicService.getCurrentMusic();
-                        tv_name.setText(currentMusic.getTitle());
-                        tv_artist.setText(currentMusic.getArtist());
-                        sb_progress.setMax(musicService.getDuration());
-                        tv_currentTime.setText(MusicUtils.formatTime(musicService.getCurrentPosition()));
-                        tv_totalTime.setText(MusicUtils.formatTime(musicService.getDuration()));
-                        ib_cycle.setImageResource(musicService.isLooping() ? R.drawable.repeat_all_black : R.drawable.arrow_right_black);
-                        ib_play.setImageResource(musicService.isPlaying() ? R.drawable.pause_black : R.drawable.play_black);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                tv_name.setText(currentMusic.getTitle());
+                                tv_artist.setText(currentMusic.getArtist());
+                                sb_progress.setMax(musicService.getDuration());
+                                tv_currentTime.setText(MusicUtils.formatTime(musicService.getCurrentPosition()));
+                                tv_totalTime.setText(MusicUtils.formatTime(musicService.getDuration()));
+                                ib_cycle.setImageResource(musicService.isLooping() ? R.drawable.repeat_all_black : R.drawable.arrow_right_black);
+                                ib_play.setImageResource(musicService.isPlaying() ? R.drawable.pause_black : R.drawable.play_black);
+                            }
+                        });
                     }
                     timer = new Timer();
                     timerTask = new TimerTask() {
                         @Override
                         public void run() {
                             if (musicService.getCurrentMusic() != null) {
-                                tv_currentTime.setText(MusicUtils.formatTime(musicService.getCurrentPosition()));
-                                if (shouldUpdateProgress) {
-                                    sb_progress.setProgress(musicService.getCurrentPosition());
-                                }
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        tv_currentTime.setText(MusicUtils.formatTime(musicService.getCurrentPosition()));
+                                        if (shouldUpdateProgress) {
+                                            sb_progress.setProgress(musicService.getCurrentPosition());
+                                        }
+                                    }
+                                });
                             }
                         }
                     };

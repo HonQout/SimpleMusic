@@ -7,13 +7,13 @@
 
     <fragment
         android:id="@+id/navigation_LocalMusic"
-        android:name="com.android.simplemusic.ui.localmusic.LocalMusicFragment"
+        android:name="com.android.simplemusic.fragment.localmusic.LocalMusicFragment"
         android:label="@string/title_LocalMusic"
         tools:layout="@layout/fragment_localmusic" />
 
     <fragment
         android:id="@+id/navigation_Playlist"
-        android:name="com.android.simplemusic.ui.playlist.PlaylistFragment"
+        android:name="com.android.simplemusic.fragment.playlist.PlaylistFragment"
         android:label="@string/title_Playlist"
         tools:layout="@layout/fragment_playlist" />
 </navigation>

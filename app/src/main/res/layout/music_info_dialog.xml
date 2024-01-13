@@ -5,19 +5,20 @@
     android:orientation="vertical">
 
     <TextView
-        android:id="@+id/mid_song"
+        android:id="@+id/mid_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="20dp"
         android:layout_marginEnd="20dp"
         android:text="@string/mid_song" />
 
     <TextView
-        android:id="@+id/mid_singer"
+        android:id="@+id/mid_artist"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
+        android:layout_marginTop="10dp"
         android:layout_marginEnd="20dp"
         android:text="@string/mid_singer" />
 
@@ -48,15 +49,15 @@
     <Button
         android:id="@+id/mid_play"
         android:layout_width="wrap_content"
-        android:text="@string/play"
+        android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_height="wrap_content" />
+        android:text="@string/play" />
 
     <Button
         android:id="@+id/mid_vifm"
         android:layout_width="wrap_content"
-        android:text="@string/view_in_file_manager"
+        android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_height="wrap_content" />
+        android:text="@string/view_in_file_manager" />
 
 </LinearLayout>

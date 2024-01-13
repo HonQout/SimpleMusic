@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -22,8 +23,9 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.i(TAG, "onCreate");
         setContentView(R.layout.activity_settings);
-        getWindow().setStatusBarColor(getResources().getColor(R.color.toolbar_background));
+        getWindow().setStatusBarColor(getResources().getColor(R.color.toolbar_background, null));
         UiMode = getApplicationContext().getResources().getConfiguration().uiMode;
         if ((UiMode & Configuration.UI_MODE_NIGHT_MASK) != Configuration.UI_MODE_NIGHT_YES) {
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
@@ -57,6 +59,7 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public boolean onPreferenceTreeClick(@NonNull Preference preference) {
             if (preference.hasKey()) {
+                // 系统声音设置
                 if (preference.getKey().equals("system_sound_settings")) {
                     Intent intent = new Intent(Settings.ACTION_SOUND_SETTINGS);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

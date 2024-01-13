@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.provider.MediaStore;
 
-import com.android.simplemusic.R;
 import com.android.simplemusic.dbhelper.PlaylistDBHelper;
 import com.android.simplemusic.bean.Music;
 import com.android.simplemusic.bean.Playlist;
@@ -21,6 +20,9 @@ public class MusicUtils {
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.TITLE,
             MediaStore.Audio.Media.ARTIST,
+            MediaStore.Audio.Media.ALBUM,
+            MediaStore.Audio.Media.BITRATE,
+            MediaStore.Audio.Media.CAPTURE_FRAMERATE,
             MediaStore.Audio.Media.DATA,
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.SIZE
@@ -33,11 +35,11 @@ public class MusicUtils {
         if (cursor != null) {
             while (cursor.moveToNext()) {
                 String name = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
-                String singer = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
+                String artist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
                 String path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
                 int duration = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION));
                 long size = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE));
-                Music music = new Music(name, singer, path, duration, size);
+                Music music = new Music(name, artist, path, duration, size);
                 if (music.getSize() > 1000 * 800) {
                     musicList.add(music);
                 }

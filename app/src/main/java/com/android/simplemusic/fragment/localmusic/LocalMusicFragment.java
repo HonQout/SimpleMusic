@@ -1,4 +1,4 @@
-package com.android.simplemusic.ui.localmusic;
+package com.android.simplemusic.fragment.localmusic;
 
 import static com.android.simplemusic.utils.FileUtils.openDir;
 import static com.android.simplemusic.utils.MusicUtils.formatSize;
@@ -42,8 +42,6 @@ import com.android.simplemusic.databinding.FragmentLocalmusicBinding;
 import com.android.simplemusic.definition.Definition;
 import com.android.simplemusic.service.MusicService;
 import com.android.simplemusic.vm.MainViewModel;
-
-import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -111,8 +109,8 @@ public class LocalMusicFragment extends Fragment implements ServiceConnection {
                 builder.setTitle(R.string.music_info);
                 builder.setIcon(R.mipmap.ic_launcher);
                 if (musicItem != null) {
-                    TextView mid_song = view1.findViewById(R.id.mid_song);
-                    TextView mid_singer = view1.findViewById(R.id.mid_singer);
+                    TextView mid_song = view1.findViewById(R.id.mid_name);
+                    TextView mid_singer = view1.findViewById(R.id.mid_artist);
                     TextView mid_duration = view1.findViewById(R.id.mid_duration);
                     TextView mid_path = view1.findViewById(R.id.mid_path);
                     TextView mid_size = view1.findViewById(R.id.mid_size);
