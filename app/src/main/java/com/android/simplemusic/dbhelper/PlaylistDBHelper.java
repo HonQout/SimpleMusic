@@ -61,11 +61,14 @@ public class PlaylistDBHelper extends SQLiteOpenHelper {
         for (int i = 0; i < TABLE_NAMES.size(); i++) {
             db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAMES.get(i) + " (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                    "name text," +
-                    "singer text," +
+                    "title text," +
+                    "artist text," +
+                    "album text," +
                     "path text," +
-                    "size integer," +
-                    "duration integer)");
+                    "bitrate integer," +
+                    "capture_frame_rate," +
+                    "duration integer," +
+                    "size integer)");
         }
     }
 
@@ -91,11 +94,14 @@ public class PlaylistDBHelper extends SQLiteOpenHelper {
             for (int i = 0; i < musicList.size(); i++) {
                 Music musicItem = musicList.get(i);
                 ContentValues cv = new ContentValues();
-                cv.put("name", musicItem.getTitle());
-                cv.put("singer", musicItem.getArtist());
+                cv.put("title", musicItem.getTitle());
+                cv.put("artist", musicItem.getArtist());
+                cv.put("album", musicItem.getAlbum());
                 cv.put("path", musicItem.getPath());
-                cv.put("size", musicItem.getSize());
+                //cv.put("bitrate", musicItem.getBitrate());
+                //cv.put("capture_frame_rate", musicItem.getCapture_frame_rate());
                 cv.put("duration", musicItem.getDuration());
+                cv.put("size", musicItem.getSize());
                 result = mDB.insert(tableName, "", cv);
                 if (result == -1) {
                     return result;
@@ -109,11 +115,14 @@ public class PlaylistDBHelper extends SQLiteOpenHelper {
     public int update(Music musicItem, String tableName, String condition) {
         if (TABLE_NAMES.contains(tableName)) {
             ContentValues cv = new ContentValues();
-            cv.put("name", musicItem.getTitle());
-            cv.put("singer", musicItem.getArtist());
+            cv.put("title", musicItem.getTitle());
+            cv.put("artist", musicItem.getArtist());
+            cv.put("album", musicItem.getAlbum());
             cv.put("path", musicItem.getPath());
-            cv.put("size", musicItem.getSize());
+            //cv.put("bitrate", musicItem.getBitrate());
+            //cv.put("capture_frame_rate", musicItem.getCapture_frame_rate());
             cv.put("duration", musicItem.getDuration());
+            cv.put("size", musicItem.getSize());
             return mDB.update(tableName, cv, condition, null);
         } else {
             return -1;
@@ -127,12 +136,15 @@ public class PlaylistDBHelper extends SQLiteOpenHelper {
             String sql = String.format("select name,singer,path,size,duration from %s where %s", tableName, condition);
             Cursor cursor = mDB.rawQuery(sql, null);
             while (cursor.moveToNext()) {
-                String name = cursor.getString(0);
-                String singer = cursor.getString(1);
-                String path = cursor.getString(2);
-                int size = cursor.getInt(3);
-                long duration = cursor.getLong(4);
-                Music music = new Music(name, singer, path, size, duration);
+                String title = cursor.getString(0);
+                String artist = cursor.getString(1);
+                String album = cursor.getString(2);
+                String path = cursor.getString(3);
+                int bitrate = cursor.getInt(4);
+                int capture_frame_rate = cursor.getInt(5);
+                int duration = cursor.getInt(6);
+                long size = cursor.getLong(7);
+                Music music = new Music(title, artist, album, path, duration, size);
                 queryResult.add(music);
             }
             cursor.close();

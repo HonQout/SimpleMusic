@@ -2,13 +2,13 @@ package com.android.simplemusic.activity;
 
 import static com.android.simplemusic.utils.MusicUtils.getMusicData;
 
-import android.Manifest;
+import com.android.simplemusic.utils.PermissionUtils;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
@@ -23,7 +23,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -50,9 +49,9 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = MainActivity.class.getSimpleName();
     private int UiMode;
     private static final int REQUEST_CODE = 1024;
-    private static final String TAG = "MainActivity";
     private ActivityMainBinding binding;
     private MainViewModel model;
     private MenuItem menu_settings;
@@ -150,11 +149,8 @@ public class MainActivity extends AppCompatActivity {
         // 绑定ViewModel
         model = new ViewModelProvider(this).get(MainViewModel.class);
         // 请求权限
-        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
-                || checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    REQUEST_CODE);
+        if (!PermissionUtils.checkPermission(this)) {
+            PermissionUtils.requestPermission(this, REQUEST_CODE);
         }
     }
 
@@ -180,11 +176,8 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "onRestart");
         super.onRestart();
         // 请求权限
-        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
-                || checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    REQUEST_CODE);
+        if (!PermissionUtils.checkPermission(this)) {
+            PermissionUtils.requestPermission(this, REQUEST_CODE);
         }
     }
 
@@ -219,8 +212,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
-                    || ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+            if (!PermissionUtils.checkPermission(this)) {
                 AlertDialog.Builder ad = new AlertDialog.Builder(this);
                 ad.setIcon(R.mipmap.ic_launcher);
                 ad.setTitle(getString(R.string.app_name));

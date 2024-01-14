@@ -5,7 +5,6 @@ import static com.android.simplemusic.utils.MusicUtils.formatSize;
 import static com.android.simplemusic.utils.MusicUtils.formatTime;
 import static com.android.simplemusic.utils.MusicUtils.getMusicData;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
@@ -14,7 +13,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.TextUtils;
@@ -30,7 +28,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -41,6 +38,7 @@ import com.android.simplemusic.bean.Music;
 import com.android.simplemusic.databinding.FragmentLocalmusicBinding;
 import com.android.simplemusic.definition.Definition;
 import com.android.simplemusic.service.MusicService;
+import com.android.simplemusic.utils.PermissionUtils;
 import com.android.simplemusic.vm.MainViewModel;
 
 import java.util.ArrayList;
@@ -183,8 +181,7 @@ public class LocalMusicFragment extends Fragment implements ServiceConnection {
     public void onResume() {
         Log.i(TAG, "onResume");
         super.onResume();
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
+        if (PermissionUtils.checkPermission(requireActivity())) {
             Log.i(TAG, "Got music data in onResume");
             musicData = getMusicData(requireActivity());
         } else {
