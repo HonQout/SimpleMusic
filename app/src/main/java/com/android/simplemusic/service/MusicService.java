@@ -11,21 +11,23 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
-import android.media.audiofx.Equalizer;
+import android.media.audiofx.Visualizer;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
-import com.android.simplemusic.activity.MainActivity;
-import com.android.simplemusic.dbhelper.PlaylistDBHelper;
 import com.android.simplemusic.R;
+import com.android.simplemusic.activity.MainActivity;
 import com.android.simplemusic.bean.Music;
+import com.android.simplemusic.bean.MyEqualizer;
 import com.android.simplemusic.definition.Definition;
 import com.android.simplemusic.event.MessageEvent;
 import com.android.simplemusic.intent.MusicIntent;
+import com.android.simplemusic.utils.FileUtils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -33,33 +35,35 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class MusicService extends Service {
-    private static final String TAG = "MusicService";
+    private static final String TAG = MusicService.class.getSimpleName();
     private static final String NOTIFICATION_MUSIC_ID = "Simple_Music";
-    private static final int NOTIFICATION_ID = 1024;
+    private static final int NOTIFICATION_ID = 1;
 
     private String currentState;
     private Music currentMusic = null;
     private MediaPlayer mediaPlayer;
     private final MusicBinder mBinder = new MusicBinder();
-    private Equalizer equalizer;
-    private static short savedEqPreset;
-    private static ArrayList<Short> savedEqSettings;
+    private MyEqualizer equalizer;
     private NotificationManager nManager;
     private NotificationChannel nChannel;
-    private Intent intent;
     private PendingIntent pIntent;
     private Notification notification;
-    private PlaylistDBHelper mHelper;
     private MusicControlReceiver mcr;
+    private Visualizer visualizer;
+    private byte[] waveformData;
+    private byte[] fftData;
 
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
     public void onCreate() {
         Log.i(TAG, "onCreate");
         super.onCreate();
         // 注册EventBus
         EventBus.getDefault().register(this);
+        // 初始化mediaPlayer
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -67,26 +71,23 @@ public class MusicService extends Service {
                 EventBus.getDefault().post(new MessageEvent(Definition.COMPLETION));
             }
         });
-        equalizer = new Equalizer(0, mediaPlayer.getAudioSessionId());
+        // 初始化equalizer
+        equalizer = new MyEqualizer(0, mediaPlayer.getAudioSessionId());
         equalizer.setEnabled(true);
-        savedEqPreset = -1;
-        savedEqSettings = new ArrayList<Short>();
         nManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             nChannel = new NotificationChannel(NOTIFICATION_MUSIC_ID, getString(R.string.music_channel), NotificationManager.IMPORTANCE_DEFAULT);
             nManager.createNotificationChannel(nChannel);
         }
-        intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, MainActivity.class);
         pIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
         mcr = new MusicControlReceiver();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Definition.PREV);
         intentFilter.addAction(Definition.PLAY_PAUSE);
         intentFilter.addAction(Definition.NEXT);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerReceiver(mcr, intentFilter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            registerReceiver(mcr, intentFilter);
         }
         notification = new NotificationCompat.Builder(this, NOTIFICATION_MUSIC_ID)
                 .setContentTitle(getString(R.string.app_name))
@@ -102,7 +103,11 @@ public class MusicService extends Service {
         startForeground(NOTIFICATION_ID, notification);
     }
 
-    public void Init(Music music) {
+    public boolean Init(Music music) {
+        if (!FileUtils.exists(music.getPath())) {
+            Log.i(TAG, "Music doesn't exist.");
+            return false;
+        }
         Log.i(TAG, "Music Init + Path: " + music.getPath());
         currentState = Definition.INIT;
         if (mediaPlayer == null) {
@@ -113,21 +118,10 @@ public class MusicService extends Service {
         currentMusic = music;
         Log.i(TAG, "Equalizer Init");
         if (equalizer == null) {
-            equalizer = new Equalizer(0, mediaPlayer.getAudioSessionId());
+            equalizer = new MyEqualizer(0, mediaPlayer.getAudioSessionId());
             equalizer.setEnabled(true);
         }
-        if (savedEqPreset != -1) {
-            equalizer.usePreset(savedEqPreset);
-        } else {
-            equalizer.usePreset((short) 0);
-        }
-        Log.i(TAG, "Use saved preset " + equalizer.getPresetName(savedEqPreset) + " to initialize equalizer");
-        if (savedEqSettings.size() == equalizer.getNumberOfBands()) {
-            for (short i = 0; i < equalizer.getNumberOfBands(); i++) {
-                equalizer.setBandLevel(i, savedEqSettings.get((int) i));
-            }
-            Log.i(TAG, "Use saved settings to initialize equalizer");
-        }
+        equalizer.init();
         // 注册待定意图
         PendingIntent piPrev = PendingIntent.getBroadcast(this, 0, MusicIntent.intentPrev, PendingIntent.FLAG_IMMUTABLE);
         PendingIntent piPlayPause = PendingIntent.getBroadcast(this, 0, MusicIntent.intentPlayPause, PendingIntent.FLAG_IMMUTABLE);
@@ -153,10 +147,11 @@ public class MusicService extends Service {
         }
         EventBus.getDefault().post(new MessageEvent(Definition.INIT));
         Play();
+        return true;
     }
 
     public void Play() {
-        Log.i(TAG, "Music Play");
+        Log.i(TAG, "Play");
         if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
             currentState = Definition.PLAY;
             mediaPlayer.start();
@@ -165,7 +160,7 @@ public class MusicService extends Service {
     }
 
     public void Pause() {
-        Log.i(TAG, "Music Pause");
+        Log.i(TAG, "Pause");
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             currentState = Definition.PAUSE;
             mediaPlayer.pause();
@@ -174,16 +169,12 @@ public class MusicService extends Service {
     }
 
     public void Play_Pause() {
-        Log.i(TAG, "Music Play_Pause");
+        Log.i(TAG, "Play_Pause");
         if (mediaPlayer != null) {
             if (mediaPlayer.isPlaying()) {
-                currentState = Definition.PAUSE;
-                mediaPlayer.pause();
-                EventBus.getDefault().post(new MessageEvent(Definition.PAUSE));
+                Pause();
             } else {
-                currentState = Definition.PLAY;
-                mediaPlayer.start();
-                EventBus.getDefault().post(new MessageEvent(Definition.PLAY));
+                Play();
             }
         }
     }
@@ -247,7 +238,7 @@ public class MusicService extends Service {
         }
     }
 
-    public void setCycleMode() {
+    public void changeCycleMode() {
         if (mediaPlayer != null) {
             mediaPlayer.setLooping(!mediaPlayer.isLooping());
             EventBus.getDefault().post(new MessageEvent(mediaPlayer.isLooping() ?
@@ -273,10 +264,6 @@ public class MusicService extends Service {
 
     public void setBandLevel(short band, short level) {
         equalizer.setBandLevel(band, level);
-        savedEqSettings = new ArrayList<Short>();
-        for (short i = 0; i < equalizer.getNumberOfBands(); i++) {
-            savedEqSettings.add(equalizer.getBandLevel(i));
-        }
     }
 
     public int getCenterFreq(short band) {
@@ -300,26 +287,23 @@ public class MusicService extends Service {
     }
 
     public short getCurrentPreset() {
-        return savedEqPreset;
-    }
-
-    public ArrayList<Short> getSavedEqSettings() {
-        return savedEqSettings;
+        return equalizer.getCurrentPreset();
     }
 
     public void usePreset(short preset) {
-        if (savedEqPreset == -1 || savedEqPreset != preset) {
-            equalizer.usePreset(preset);
-        }
-        savedEqPreset = preset;
-        Log.i(TAG, "Use preset " + equalizer.getPresetName(preset));
+        equalizer.usePreset(preset);
     }
 
     public void resetEqSet() {
-        if (savedEqPreset == -1) {
-            savedEqPreset = (short) Equalizer.CONTENT_TYPE_MUSIC;
-        }
-        equalizer.usePreset(savedEqPreset);
+        equalizer.reset();
+    }
+
+    public byte[] getWaveformData() {
+        return waveformData;
+    }
+
+    public byte[] getFftData() {
+        return fftData;
     }
 
     public class MusicBinder extends Binder {
@@ -379,7 +363,7 @@ public class MusicService extends Service {
                         break;
                     case Definition.CYCLE_CHANGE:
                         Log.i(TAG, "Received CYCLE_CHANGE");
-                        setCycleMode();
+                        changeCycleMode();
                         break;
                     default:
                         Log.i(TAG, String.format("Received %s", action));
@@ -389,11 +373,41 @@ public class MusicService extends Service {
         }
     }
 
+    public void initializeVisualizer() {
+        // 初始化visualizer
+        visualizer = new Visualizer(mediaPlayer.getAudioSessionId());
+        visualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[0]);
+        visualizer.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
+            @Override
+            public void onWaveFormDataCapture(Visualizer visualizer, byte[] waveform, int samplingRate) {
+                waveformData = waveform;
+                EventBus.getDefault().post(new MessageEvent(Definition.VISUALIZER_DATA_UPDATE, "WaveForm"));
+            }
+
+            @Override
+            public void onFftDataCapture(Visualizer visualizer, byte[] fft, int samplingRate) {
+                fftData = fft;
+                EventBus.getDefault().post(new MessageEvent(Definition.VISUALIZER_DATA_UPDATE, "Fft"));
+            }
+        }, Visualizer.getMaxCaptureRate() / 2, true, false);
+        visualizer.setEnabled(true);
+        Log.i(TAG, "Visualizer initialized");
+    }
+
     // 处理EventBus事件
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void handleEvent(MessageEvent messageEvent) {
-        String eventMessage = messageEvent.getMessage();
-        switch (eventMessage) {
+        String message = messageEvent.getMessage();
+        switch (message) {
+            case Definition.PERMISSION_ACQUIRED:
+                Log.i(TAG, "Received PERMISSION_ACQUIRED");
+                String content = (String) messageEvent.getContent();
+                if (Objects.equals(content, Definition.RECORD_AUDIO)) {
+                    if (visualizer == null) {
+                        initializeVisualizer();
+                    }
+                }
+                break;
             case Definition.PREV:
                 Log.i(TAG, "Received PREV");
                 break;
@@ -409,10 +423,9 @@ public class MusicService extends Service {
                 break;
             case Definition.CYCLE_CHANGE:
                 Log.i(TAG, "Received CYCLE_CHANGE");
-                setCycleMode();
+                changeCycleMode();
                 break;
             default:
-                Log.i(TAG, String.format("Received %s", eventMessage));
                 break;
         }
     }

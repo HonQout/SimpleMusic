@@ -1,23 +1,23 @@
 <resources>
     <!-- Theme_Color Preference -->
     <string-array name="theme_color_entries">
-        <item>@string/red</item>
-        <item>@string/green</item>
-        <item>@string/dark_blue</item>
-        <item>@string/yellow</item>
-        <item>@string/purple</item>
-        <item>@string/light_blue</item>
-        <item>@string/black</item>
+        <item>@string/titian_red</item>
+        <item>@string/bordeaux_red</item>
+        <item>@string/marrs_green</item>
+        <item>@string/klein_blue</item>
+        <item>@string/sennelier_yellow</item>
+        <item>@string/lavender_purple</item>
+        <item>@string/white</item>
     </string-array>
 
     <string-array name="theme_color_values">
-        <item>red</item>
-        <item>green</item>
-        <item>dark_blue</item>
-        <item>yellow</item>
-        <item>purple</item>
-        <item>light_blue</item>
-        <item>black</item>
+        <item>titian_red</item>
+        <item>bordeaux_red</item>
+        <item>marrs_green</item>
+        <item>klein_blue</item>
+        <item>sennelier_yellow</item>
+        <item>lavender_purple</item>
+        <item>white</item>
     </string-array>
 
     <!-- Night_Mode Preference -->

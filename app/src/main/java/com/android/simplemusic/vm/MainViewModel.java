@@ -1,41 +1,40 @@
 package com.android.simplemusic.vm;
 
+import android.graphics.Bitmap;
+
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.android.simplemusic.dbhelper.PlaylistDBHelper;
 import com.android.simplemusic.bean.Music;
-import com.android.simplemusic.bean.Playlist;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MainViewModel extends ViewModel {
-    private final MutableLiveData<List<Music>> mMusicList = new MutableLiveData<>();
-    private final MutableLiveData<PlaylistDBHelper> mDBHelper = new MutableLiveData<>();
-    private final MutableLiveData<ArrayList<Playlist>> mPlaylists = new MutableLiveData<>();
+    private final MutableLiveData<List<Music>> mMusicList = new MutableLiveData<List<Music>>();
+    private final MutableLiveData<Integer> mIndex = new MutableLiveData<Integer>();
+    private final MutableLiveData<Bitmap> mImage = new MutableLiveData<Bitmap>();
 
-    public void setmMusicList(List<Music> musicList) {
+    public void setMusicList(List<Music> musicList) {
         mMusicList.postValue(musicList);
     }
 
-    public MutableLiveData<List<Music>> getmMusicList() {
+    public MutableLiveData<List<Music>> getMusicList() {
         return mMusicList;
     }
 
-    public void setmDBHelper(PlaylistDBHelper dbHelper) {
-        mDBHelper.postValue(dbHelper);
+    public void setIndex(int index) {
+        mIndex.postValue(index);
     }
 
-    public MutableLiveData<PlaylistDBHelper> getmDBHelper() {
-        return mDBHelper;
+    public MutableLiveData<Integer> getIndex() {
+        return mIndex;
     }
 
-    public void setmPlaylists(ArrayList<Playlist> playlists) {
-        mPlaylists.postValue(playlists);
+    public void setImage(Bitmap image) {
+        mImage.postValue(image);
     }
 
-    public MutableLiveData<ArrayList<Playlist>> getmPlaylists() {
-        return mPlaylists;
+    public MutableLiveData<Bitmap> getImage() {
+        return mImage;
     }
 }

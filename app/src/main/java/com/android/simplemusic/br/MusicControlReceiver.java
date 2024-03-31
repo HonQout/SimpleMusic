@@ -14,12 +14,16 @@ public class MusicControlReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
         if (action != null) {
-            if (action.equals(Definition.PREV)) {
-                Log.i(TAG, "Received PREV");
-            } else if (action.equals(Definition.PLAY)) {
-                Log.i(TAG, "Received PLAY");
-            } else if (action.equals(Definition.NEXT)) {
-                Log.i(TAG, "Received NEXT");
+            switch (action) {
+                case Definition.PREV:
+                    Log.i(TAG, "Received PREV");
+                    break;
+                case Definition.PLAY:
+                    Log.i(TAG, "Received PLAY");
+                    break;
+                case Definition.NEXT:
+                    Log.i(TAG, "Received NEXT");
+                    break;
             }
         }
     }

@@ -1,35 +1,39 @@
 package com.android.simplemusic.activity;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
-
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.res.Configuration;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.android.simplemusic.bean.Music;
-import com.android.simplemusic.dbhelper.PlaylistDBHelper;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.res.ResourcesCompat;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.preference.PreferenceManager;
+
 import com.android.simplemusic.R;
+import com.android.simplemusic.bean.Music;
 import com.android.simplemusic.databinding.ActivityPlayingBinding;
 import com.android.simplemusic.definition.Definition;
 import com.android.simplemusic.event.MessageEvent;
 import com.android.simplemusic.service.MusicService;
+import com.android.simplemusic.utils.ColorUtils;
 import com.android.simplemusic.utils.MusicUtils;
+import com.android.simplemusic.utils.ThemeUtils;
 import com.android.simplemusic.vm.MainViewModel;
 
 import org.greenrobot.eventbus.EventBus;
@@ -44,37 +48,27 @@ import java.util.TimerTask;
 public class PlayingActivity extends AppCompatActivity {
     private static final String TAG = "PlayingActivity";
     private ActivityPlayingBinding binding;
-    private int UiMode;
     private boolean shouldUpdateProgress = true;
-    private MainViewModel model;
+    private MainViewModel viewModel;
     private MusicService musicService;
-    private PlaylistDBHelper mDBHelper;
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.i(TAG, "onServiceConnected");
             musicService = ((MusicService.MusicBinder) service).getService();
-            EventBus.getDefault().post(new MessageEvent(Definition.SERVICE_CONNECTED, "PlayingActivity"));
+            EventBus.getDefault().post(new MessageEvent(Definition.SERVICE_CONNECTED, PlayingActivity.class.getSimpleName()));
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             Log.i(TAG, "onServiceDisconnected");
             musicService = null;
+            EventBus.getDefault().post(new MessageEvent(Definition.SERVICE_DISCONNECTED, PlayingActivity.class.getSimpleName()));
         }
     };
+    private ThemeUtils themeUtils;
     private Timer timer;
     private TimerTask timerTask;
-    private TextView tv_name;
-    private TextView tv_artist;
-    private SeekBar sb_progress;
-    private TextView tv_currentTime;
-    private TextView tv_totalTime;
-    private ImageButton ib_cycle;
-    private ImageButton ib_prev;
-    private ImageButton ib_play;
-    private ImageButton ib_next;
-    private ImageButton ib_eq;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,39 +76,58 @@ public class PlayingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         // 注册EventBus
         EventBus.getDefault().register(this);
-        // 获取绑定
+        // 初始化界面
         binding = ActivityPlayingBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        // 设置系统UI可见性
-        UiMode = getApplicationContext().getResources().getConfiguration().uiMode;
-        if ((UiMode & Configuration.UI_MODE_NIGHT_MASK) != Configuration.UI_MODE_NIGHT_YES) {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
-        // 初始化Toolbar
-        binding.toolbarPlaying.setTitle("");
-        setSupportActionBar(binding.toolbarPlaying);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        themeUtils = new ThemeUtils(this) {
+            @Override
+            public void whenEnabledNightMode() {
+                getWindow().setStatusBarColor(Color.BLACK);
+                getWindow().setNavigationBarColor(Color.BLACK);
+                binding.getRoot().setBackgroundColor(Color.BLACK);
+            }
+
+            @Override
+            public void whenDisabledNightMode() {
+                int color = ColorUtils.analyzeColor(PlayingActivity.this,
+                        sharedPreferences.getString("theme_color", "white"));
+                if (sharedPreferences.getBoolean("immersion_status_bar", true)) {
+                    getWindow().setStatusBarColor(color);
+                } else {
+                    getWindow().setStatusBarColor(Color.GRAY);
+                }
+                if (sharedPreferences.getBoolean("immersion_navigation_bar", true)) {
+                    getWindow().setNavigationBarColor(color);
+                } else {
+                    getWindow().setNavigationBarColor(Color.TRANSPARENT);
+                }
+                View decorView = getWindow().getDecorView();
+                if (color == Color.WHITE) {
+                    decorView.setSystemUiVisibility(decorView.getSystemUiVisibility() | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                } else {
+                    decorView.setSystemUiVisibility(decorView.getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                }
+                binding.getRoot().setBackgroundColor(color);
+                binding.sbProgress.setBackgroundColor(ColorUtils.getInverseColor(color));
+            }
+        };
         // 绑定ViewModel
-        model = new ViewModelProvider(this).get(MainViewModel.class);
+        viewModel = new ViewModelProvider(this).get(MainViewModel.class);
         // 绑定Music Service
         Intent intent = new Intent(getApplicationContext(), MusicService.class);
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-        // 初始化控件
-        View root = binding.getRoot();
-        tv_name = root.findViewById(R.id.tv_name);
-        tv_artist = root.findViewById(R.id.tv_artist);
-        sb_progress = root.findViewById(R.id.sb_progress);
-        tv_currentTime = root.findViewById(R.id.tv_current_time);
-        tv_totalTime = root.findViewById(R.id.tv_total_time);
-        ib_cycle = root.findViewById(R.id.ib_cycle);
-        ib_prev = root.findViewById(R.id.ib_prev);
-        ib_play = root.findViewById(R.id.ib_play);
-        ib_next = root.findViewById(R.id.ib_next);
-        ib_eq = root.findViewById(R.id.ib_eq);
         // 设置控件的事件侦听器
-        sb_progress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        if (viewModel.getImage().getValue() != null) {
+            binding.musicPic.setImageBitmap(viewModel.getImage().getValue());
+        } else {
+            binding.musicPic.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.record, null));
+        }
+        //binding.barGraph.setNumBar(20);
+        binding.sbProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                Log.i(TAG, "progress:" + progress + ",fromUser:" + fromUser);
+                //Log.i(TAG, "progress:" + progress + ",fromUser:" + fromUser);
                 if (fromUser && musicService.getCurrentMusic() != null) {
                     musicService.setPosition(progress);
                 }
@@ -130,23 +143,35 @@ public class PlayingActivity extends AppCompatActivity {
                 shouldUpdateProgress = true;
             }
         });
-        ib_cycle.setOnClickListener(new View.OnClickListener() {
+        binding.ibCycle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 EventBus.getDefault().post(new MessageEvent(Definition.CYCLE_CHANGE));
             }
         });
-        ib_play.setOnClickListener(new View.OnClickListener() {
+        binding.ibPrev.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                EventBus.getDefault().post(new MessageEvent(Definition.PREV));
+            }
+        });
+        binding.ibPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 EventBus.getDefault().post(new MessageEvent(Definition.PLAY_PAUSE));
             }
         });
-        ib_eq.setOnClickListener(new View.OnClickListener() {
+        binding.ibNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                EventBus.getDefault().post(new MessageEvent(Definition.NEXT));
+            }
+        });
+        binding.ibEq.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 AlertDialog.Builder eqdBuilder = new AlertDialog.Builder(PlayingActivity.this);
-                eqdBuilder.setIcon(R.drawable.equalizer_black);
+                eqdBuilder.setIcon(R.mipmap.equalizer);
                 eqdBuilder.setTitle(getString(R.string.equalizer));
                 LinearLayout linearLayout = new LinearLayout(PlayingActivity.this);
                 linearLayout.setOrientation(LinearLayout.VERTICAL);
@@ -215,22 +240,8 @@ public class PlayingActivity extends AppCompatActivity {
                     }
                 });
                 eqdBuilder.setView(linearLayout);
-                eqdBuilder.setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                    }
-                });
-                eqdBuilder.setNeutralButton(R.string.reset, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        musicService.resetEqSet();
-                        Log.i("Equalizer", String.format("Number of presets is %d", (int) musicService.getNumPresets()));
-                        for (short i = 0; i < musicService.getNumBands(); i++) {
-                            seekBars.get((int) i).setProgress(musicService.getBandLevel(i) - minEqualizer);
-                        }
-                    }
-                });
+                eqdBuilder.setPositiveButton(R.string.confirm, null);
+                eqdBuilder.setNeutralButton(R.string.reset, null);
                 AlertDialog eqDialog = eqdBuilder.create();
                 eqDialog.show();
                 eqDialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(new View.OnClickListener() {
@@ -257,9 +268,17 @@ public class PlayingActivity extends AppCompatActivity {
     protected void onResume() {
         Log.i(TAG, "onResume");
         super.onResume();
-        mDBHelper = PlaylistDBHelper.getInstance(this, 1);
-        model.setmDBHelper(mDBHelper);
-        mDBHelper.openWriteLink();
+        viewModel.getImage().observe(this, new Observer<Bitmap>() {
+            @Override
+            public void onChanged(Bitmap bitmap) {
+                if (bitmap != null) {
+                    binding.musicPic.setImageBitmap(bitmap);
+                } else {
+                    binding.musicPic.setImageDrawable(ResourcesCompat.getDrawable(getResources(),
+                            R.drawable.record, null));
+                }
+            }
+        });
     }
 
     @Override
@@ -300,13 +319,13 @@ public class PlayingActivity extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                tv_name.setText(currentMusic.getTitle());
-                                tv_artist.setText(currentMusic.getArtist());
-                                sb_progress.setMax(musicService.getDuration());
-                                tv_currentTime.setText(MusicUtils.formatTime(musicService.getCurrentPosition()));
-                                tv_totalTime.setText(MusicUtils.formatTime(musicService.getDuration()));
-                                ib_cycle.setImageResource(musicService.isLooping() ? R.drawable.repeat_all_black : R.drawable.arrow_right_black);
-                                ib_play.setImageResource(musicService.isPlaying() ? R.drawable.pause_black : R.drawable.play_black);
+                                binding.tvName.setText(currentMusic.getTitle());
+                                binding.tvArtist.setText(currentMusic.getArtist());
+                                binding.sbProgress.setMax(musicService.getDuration());
+                                binding.tvCurrentTime.setText(MusicUtils.formatDuration(musicService.getCurrentPosition()));
+                                binding.tvTotalTime.setText(MusicUtils.formatDuration(musicService.getDuration()));
+                                binding.ibCycle.setImageResource(musicService.isLooping() ? R.drawable.baseline_repeat_one_white : R.drawable.baseline_repeat_white);
+                                binding.ibPlay.setImageResource(musicService.isPlaying() ? R.drawable.baseline_pause_circle_outline_white : R.drawable.baseline_play_circle_outline_white);
                             }
                         });
                     }
@@ -318,9 +337,9 @@ public class PlayingActivity extends AppCompatActivity {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        tv_currentTime.setText(MusicUtils.formatTime(musicService.getCurrentPosition()));
+                                        binding.tvCurrentTime.setText(MusicUtils.formatDuration(musicService.getCurrentPosition()));
                                         if (shouldUpdateProgress) {
-                                            sb_progress.setProgress(musicService.getCurrentPosition());
+                                            binding.sbProgress.setProgress(musicService.getCurrentPosition());
                                         }
                                     }
                                 });
@@ -332,38 +351,47 @@ public class PlayingActivity extends AppCompatActivity {
                 break;
             case Definition.INIT:
                 Log.i(TAG, "Handled Message INIT");
-                tv_name.setText(musicService.getCurrentMusic().getTitle());
-                tv_artist.setText(musicService.getCurrentMusic().getArtist());
-                sb_progress.setMax(musicService.getCurrentMusic().getDuration());
-                tv_totalTime.setText(MusicUtils.formatTime(musicService.getCurrentMusic().getDuration()));
+                binding.tvName.setText(musicService.getCurrentMusic().getTitle());
+                binding.tvArtist.setText(musicService.getCurrentMusic().getArtist());
+                binding.sbProgress.setMax(musicService.getCurrentMusic().getDuration());
+                binding.tvTotalTime.setText(MusicUtils.formatDuration(musicService.getCurrentMusic().getDuration()));
                 break;
             case Definition.PLAY:
                 Log.i(TAG, "Received PLAY");
-                ib_play.setImageResource(R.drawable.pause_black);
+                binding.ibPlay.setImageResource(R.drawable.baseline_pause_circle_outline_white);
                 break;
             case Definition.PAUSE:
                 Log.i(TAG, "Received PAUSE");
-                ib_play.setImageResource(R.drawable.play_black);
+                binding.ibPlay.setImageResource(R.drawable.baseline_play_circle_outline_white);
                 break;
             case Definition.COMPLETION:
                 Log.i(TAG, "Received COMPLETION");
                 if (!musicService.isPlaying()) {
-                    ib_play.setImageResource(R.drawable.play_black);
+                    binding.ibPlay.setImageResource(R.drawable.baseline_play_circle_outline_white);
                 }
                 break;
             case Definition.NOT_REPEATING:
                 Log.i(TAG, "Received NOT_REPEATING");
-                ib_cycle.setImageResource(R.drawable.arrow_right_black);
+                binding.ibCycle.setImageResource(R.drawable.baseline_repeat_white);
                 break;
             case Definition.REPEAT_ALL:
                 Log.i(TAG, "Received REPEAT_ALL");
-                ib_cycle.setImageResource(R.drawable.repeat_all_black);
+                binding.ibCycle.setImageResource(R.drawable.baseline_repeat_one_white);
                 break;
             case Definition.PROGRESS_CHANGE:
                 Log.i(TAG, "Received PROGRESS_CHANGE");
-                tv_currentTime.setText(MusicUtils.formatTime(musicService.getCurrentPosition()));
+                binding.tvCurrentTime.setText(MusicUtils.formatDuration(musicService.getCurrentPosition()));
                 if (shouldUpdateProgress) {
-                    sb_progress.setProgress(musicService.getCurrentPosition());
+                    binding.sbProgress.setProgress(musicService.getCurrentPosition());
+                }
+                break;
+            case Definition.VISUALIZER_DATA_UPDATE:
+                Log.i(TAG, "Received " + Definition.VISUALIZER_DATA_UPDATE);
+                String info = (String) messageEvent.getContent();
+                if (info.equals("WaveForm")) {
+                    //binding.barGraph.onReceiveByte(musicService.getWaveformData());
+                } else if (info.equals("Fft")) {
+                    //binding.barGraph.onReceiveByte(musicService.getFftData());
                 }
                 break;
             default:

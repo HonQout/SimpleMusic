@@ -1,53 +1,48 @@
 package com.android.simplemusic.fragment.playlist;
 
-import static com.android.simplemusic.utils.MusicUtils.getPlaylistData;
-
-import android.Manifest;
-import android.annotation.SuppressLint;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ListView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.android.simplemusic.dbhelper.PlaylistDBHelper;
-import com.android.simplemusic.adapter.MenuListAdapter;
-import com.android.simplemusic.bean.Playlist;
+import com.android.simplemusic.R;
+import com.android.simplemusic.adapter.PlaylistListAdapter;
+import com.android.simplemusic.application.MainApplication;
+import com.android.simplemusic.dao.PlaylistDao;
 import com.android.simplemusic.databinding.FragmentPlaylistBinding;
-import com.android.simplemusic.definition.Definition;
+import com.android.simplemusic.entity.Playlist;
 import com.android.simplemusic.service.MusicService;
-import com.android.simplemusic.vm.MainViewModel;
+import com.android.simplemusic.utils.PermissionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class PlaylistFragment extends Fragment implements ServiceConnection {
-    private final String TAG = "PlaylistFragment";
-
-    private ArrayList<Playlist> playlists;
+    private final String TAG = PlaylistFragment.class.getSimpleName();
 
     private FragmentPlaylistBinding binding;
-    private MainViewModel model;
+    private ListView mListView;
+    private PlaylistViewModel model;
     private MusicService musicService;
-    private PlaylistDBHelper mDBHelper;
-    private MenuListAdapter menuListAdapter;
-    private PlaylistReceiver pr;
+    private PlaylistListAdapter mListAdapter;
+    private PlaylistDao playlistDao;
 
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "onCreate");
@@ -55,34 +50,49 @@ public class PlaylistFragment extends Fragment implements ServiceConnection {
         // 绑定Music Service
         Intent intent = new Intent(requireActivity().getApplicationContext(), MusicService.class);
         requireActivity().getApplicationContext().bindService(intent, this, Context.BIND_AUTO_CREATE);
-        // 注册接收是否获取权限广播的广播接收器
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(Definition.PERMISSION_ACQUIRED);
-        intentFilter.addAction(Definition.DBH_ACQUIRED);
-        pr = new PlaylistReceiver();
-        requireContext().registerReceiver(pr, intentFilter);
+        // 初始化PlaylistDao
+        playlistDao = MainApplication.getInstance().getPlaylistDatabase().playlistDao();
     }
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.i(TAG, "onCreateView");
         // 绑定ViewModel
-        model = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
-        mDBHelper = model.getmDBHelper().getValue();
-        // PlaylistViewModel playlistViewModel = new ViewModelProvider(this).get(PlaylistViewModel.class);
+        model = new ViewModelProvider(requireActivity()).get(PlaylistViewModel.class);
         binding = FragmentPlaylistBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
-        // 初始化播放列表列表
+        // 初始化播放列表列表适配器
+        mListAdapter = new PlaylistListAdapter(requireActivity(), R.layout.playlist_item, new ArrayList<Playlist>());
+        mListView = root.findViewById(R.id.playlistList);
+        mListView.setAdapter(mListAdapter);
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.i(TAG, "clicked " + Objects.requireNonNull(mListAdapter.getItem(position)).getName());
+            }
+        });
+        return root;
+    }
+
+    @Override
+    public void onResume() {
+        Log.i(TAG, "onResume");
+        super.onResume();
         List<Playlist> playlists;
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
-            playlists = getPlaylistData(mDBHelper);
+        if (PermissionUtils.checkStoragePermission(requireActivity())) {
+            playlists = playlistDao.getAllPlaylists();
         } else {
             playlists = new ArrayList<Playlist>();
         }
-        model.setmPlaylists((ArrayList<Playlist>) playlists);
-        // 初始化播放列表列表适配器
-
-        return root;
+        model.setPlaylists((ArrayList<Playlist>) playlists);
+        if (mListAdapter != null) {
+            requireActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mListAdapter.setPlaylistList(playlists);
+                    mListAdapter.notifyDataSetChanged();
+                }
+            });
+        }
     }
 
     @Override
@@ -109,17 +119,4 @@ public class PlaylistFragment extends Fragment implements ServiceConnection {
         Log.i(TAG, "onServiceDisconnected");
         musicService = null;
     }
-
-    // 广播接收器
-    public class PlaylistReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.i(TAG, "Received message: " + intent.getAction());
-            if (Objects.equals(intent.getAction(), Definition.DBH_ACQUIRED)) {
-                mDBHelper = model.getmDBHelper().getValue();
-            }
-        }
-    }
-
-    //
 }

@@ -1,19 +1,24 @@
 package com.android.simplemusic.fragment.playlist;
 
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class PlaylistViewModel extends ViewModel {
+import com.android.simplemusic.entity.Playlist;
 
-    private final MutableLiveData<String> mText;
+import java.util.List;
+
+public class PlaylistViewModel extends ViewModel {
+    private final MutableLiveData<List<Playlist>> mPlaylists;
 
     public PlaylistViewModel() {
-        mText = new MutableLiveData<>();
-        mText.setValue("This is playlist fragment");
+        mPlaylists = new MutableLiveData<List<Playlist>>();
     }
 
-    public LiveData<String> getText() {
-        return mText;
+    public void setPlaylists(List<Playlist> playlists) {
+        mPlaylists.postValue(playlists);
+    }
+
+    public List<Playlist> getPlaylists() {
+        return mPlaylists.getValue();
     }
 }

@@ -14,7 +14,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 
 import com.android.simplemusic.R;
-import com.android.simplemusic.bean.Playlist;
+import com.android.simplemusic.entity.Playlist;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ public class PlaylistListAdapter extends ArrayAdapter<Playlist> implements Filte
         }
     }
 
-    public PlaylistListAdapter(Context context, int resourceId, List<Playlist> playlistList) {
+    public PlaylistListAdapter(Context context, int resourceId, ArrayList<Playlist> playlistList) {
         super(context, resourceId, playlistList);
         this.resourceId = resourceId;
         this.playlistList = playlistList;
@@ -79,7 +79,7 @@ public class PlaylistListAdapter extends ArrayAdapter<Playlist> implements Filte
         }
         if (playlist != null) {
             viewHolder.playlistImage.setImageResource(R.drawable.library_music_black);
-            viewHolder.playlistName.setText(playlist.getTitle());
+            viewHolder.playlistName.setText(playlist.getName());
         }
         return view;
     }
@@ -94,7 +94,7 @@ public class PlaylistListAdapter extends ArrayAdapter<Playlist> implements Filte
             } else {
                 list = new ArrayList<Playlist>();
                 for (Playlist item : playlistList_bak) {
-                    if (item.getTitle().contains(charSequence)) {
+                    if (item.getName().contains(charSequence)) {
                         list.add(item);
                     }
                 }

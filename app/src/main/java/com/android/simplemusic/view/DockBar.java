@@ -1,6 +1,7 @@
 package com.android.simplemusic.view;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
@@ -10,6 +11,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
 
 import com.android.simplemusic.R;
 
@@ -69,7 +72,7 @@ public class DockBar extends RelativeLayout {
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
     }
 
@@ -81,8 +84,12 @@ public class DockBar extends RelativeLayout {
         return MeasureSpec.makeMeasureSpec(layoutParams.height, MeasureSpec.EXACTLY);
     }
 
-    public void setImageViewSrc(Drawable drawable) {
+    public void setImageViewDrawable(Drawable drawable) {
         imageView.setImageDrawable(drawable);
+    }
+
+    public void setImageViewBitmap(Bitmap bitmap) {
+        imageView.setImageBitmap(bitmap);
     }
 
     public void setImageViewOnClickListener(OnClickListener onClickListener) {
