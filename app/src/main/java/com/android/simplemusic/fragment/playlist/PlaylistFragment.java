@@ -22,9 +22,9 @@ import androidx.lifecycle.ViewModelProvider;
 import com.android.simplemusic.R;
 import com.android.simplemusic.adapter.PlaylistListAdapter;
 import com.android.simplemusic.application.MainApplication;
-import com.android.simplemusic.dao.PlaylistDao;
+import com.android.simplemusic.room.dao.PlaylistDao;
 import com.android.simplemusic.databinding.FragmentPlaylistBinding;
-import com.android.simplemusic.entity.Playlist;
+import com.android.simplemusic.room.entity.Playlist;
 import com.android.simplemusic.service.MusicService;
 import com.android.simplemusic.utils.PermissionUtils;
 

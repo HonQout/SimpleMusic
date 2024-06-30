@@ -4,12 +4,13 @@ import android.media.audiofx.Equalizer;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MyEqualizer extends Equalizer {
     private static final String TAG = MyEqualizer.class.getSimpleName();
-    private static short preset = -1;
-    private static boolean personalized = false;
-    private static ArrayList<Short> settings = new ArrayList<Short>();
+    private short preset = -1;
+    private boolean personalized = false;
+    private ArrayList<Short> settings = new ArrayList<Short>();
 
     public MyEqualizer(int priority, int audioSession) throws RuntimeException {
         super(priority, audioSession);
@@ -31,17 +32,16 @@ public class MyEqualizer extends Equalizer {
     }
 
     @Override
-    public void setBandLevel(short band, short level) throws IllegalArgumentException, IllegalStateException, UnsupportedOperationException {
+    public void setBandLevel(short band, short level)
+            throws IllegalArgumentException, IllegalStateException, UnsupportedOperationException {
         super.setBandLevel(band, level);
         personalized = true;
-        settings = new ArrayList<Short>();
-        for (short i = 0; i < getNumberOfBands(); i++) {
-            settings.add(getBandLevel(i));
-        }
+        settings.set(band, level);
     }
 
     @Override
-    public void usePreset(short preset) throws IllegalArgumentException, IllegalStateException, UnsupportedOperationException {
+    public void usePreset(short preset) throws IllegalArgumentException, IllegalStateException,
+            UnsupportedOperationException {
         super.usePreset(preset);
         this.preset = preset;
         Log.i(TAG, "Use preset " + preset);
@@ -52,5 +52,34 @@ public class MyEqualizer extends Equalizer {
             preset = (short) 0;
         }
         usePreset(preset);
+        personalized = false;
+    }
+
+    public boolean isPersonalized() {
+        return personalized;
+    }
+
+    public List<Integer> getCenterFrequencies() {
+        List<Integer> centerFrequencies = new ArrayList<Integer>();
+        for (short i = 0; i < getNumberOfBands(); i++) {
+            centerFrequencies.add(getCenterFreq(i));
+        }
+        return centerFrequencies;
+    }
+
+    public short getMinBandLevel() {
+        return getBandLevelRange()[0];
+    }
+
+    public short getMaxBandLevel() {
+        return getBandLevelRange()[1];
+    }
+
+    public List<String> getPresetNames() {
+        List<String> presetNames = new ArrayList<String>();
+        for (short i = 0; i < getNumberOfPresets(); i++) {
+            presetNames.add(getPresetName(i));
+        }
+        return presetNames;
     }
 }

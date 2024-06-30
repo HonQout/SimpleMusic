@@ -1,4 +1,4 @@
-package com.android.simplemusic.dao;
+package com.android.simplemusic.room.dao;
 
 import androidx.room.Dao;
 import androidx.room.Delete;
@@ -7,7 +7,7 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
-import com.android.simplemusic.entity.Playlist;
+import com.android.simplemusic.room.entity.Playlist;
 
 import java.util.List;
 

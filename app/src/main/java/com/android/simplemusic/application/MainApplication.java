@@ -4,7 +4,7 @@ import android.app.Application;
 
 import androidx.room.Room;
 
-import com.android.simplemusic.db.PlaylistDatabase;
+import com.android.simplemusic.room.db.PlaylistDatabase;
 
 public class MainApplication extends Application {
     private static MainApplication mainApplication;

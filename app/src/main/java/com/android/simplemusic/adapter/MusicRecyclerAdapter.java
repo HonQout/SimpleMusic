@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MusicRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Filterable {
+    public static final String TAG = MusicRecyclerAdapter.class.getSimpleName();
+
     private Context context;
     private List<Music> musicList;
     private List<Music> musicList_bak;
@@ -109,10 +111,10 @@ public class MusicRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.View
 
         public ItemHolder(@NonNull View itemView) {
             super(itemView);
-            musicImage = itemView.findViewById(R.id.musicImage);
-            musicName = itemView.findViewById(R.id.musicName);
-            musicInfo = itemView.findViewById(R.id.musicInfo);
-            musicDuration = itemView.findViewById(R.id.musicDuration);
+            musicImage = itemView.findViewById(R.id.music_image);
+            musicName = itemView.findViewById(R.id.music_title);
+            musicInfo = itemView.findViewById(R.id.music_info);
+            musicDuration = itemView.findViewById(R.id.music_duration);
         }
     }
 

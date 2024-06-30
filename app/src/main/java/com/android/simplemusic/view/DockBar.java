@@ -46,14 +46,14 @@ public class DockBar extends RelativeLayout {
     }
 
     private void initView(Context context) {
-        View view = LayoutInflater.from(context).inflate(R.layout.dockbar, this, true);
-        imageView = (ImageView) view.findViewById(R.id.dockbar_pic);
-        textView1 = (TextView) view.findViewById(R.id.dockbar_song);
-        textView2 = (TextView) view.findViewById(R.id.dockbar_singer);
-        imageButton1 = (ImageButton) view.findViewById(R.id.dockbar_prev);
-        imageButton2 = (ImageButton) view.findViewById(R.id.dockbar_play_state);
-        imageButton3 = (ImageButton) view.findViewById(R.id.dockbar_next);
-        dockbar_root = (RelativeLayout) view.findViewById(R.id.dockbar_root);
+        View view = LayoutInflater.from(context).inflate(R.layout.dock_bar, this, true);
+        imageView = (ImageView) view.findViewById(R.id.dock_bar_pic);
+        textView1 = (TextView) view.findViewById(R.id.dock_bar_title);
+        textView2 = (TextView) view.findViewById(R.id.dock_bar_artist);
+        imageButton1 = (ImageButton) view.findViewById(R.id.dock_bar_prev);
+        imageButton2 = (ImageButton) view.findViewById(R.id.dock_bar_play);
+        imageButton3 = (ImageButton) view.findViewById(R.id.dock_bar_next);
+        dockbar_root = (RelativeLayout) view.findViewById(R.id.dock_bar);
     }
 
     @Override

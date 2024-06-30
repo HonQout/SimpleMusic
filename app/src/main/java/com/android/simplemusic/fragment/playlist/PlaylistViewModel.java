@@ -3,7 +3,7 @@ package com.android.simplemusic.fragment.playlist;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.android.simplemusic.entity.Playlist;
+import com.android.simplemusic.room.entity.Playlist;
 
 import java.util.List;
 

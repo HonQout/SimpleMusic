@@ -1,10 +1,10 @@
-package com.android.simplemusic.entity;
+package com.android.simplemusic.room.entity;
 
 import androidx.room.Entity;
 import androidx.room.TypeConverters;
 
 import com.android.simplemusic.bean.Music;
-import com.android.simplemusic.db.MusicItemConverter;
+import com.android.simplemusic.room.converter.MusicItemConverter;
 
 import java.util.List;
 

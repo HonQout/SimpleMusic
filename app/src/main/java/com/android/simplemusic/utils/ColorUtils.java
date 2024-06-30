@@ -8,6 +8,12 @@ import androidx.annotation.NonNull;
 import com.android.simplemusic.R;
 
 public class ColorUtils {
+    static class RGBColor{
+        public int r;
+        public int g;
+        public int b;
+    }
+
     public static int analyzeColor(@NonNull Context context, String color) {
         switch (color) {
             case "red":
@@ -43,6 +49,7 @@ public class ColorUtils {
         }
     }
 
+    @ColorInt
     public static int getInverseColor(@ColorInt int color) {
         String str_color = Integer.toHexString(color);
         if (str_color.length() == 8) {

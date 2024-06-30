@@ -14,7 +14,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 
 import com.android.simplemusic.R;
-import com.android.simplemusic.entity.Playlist;
+import com.android.simplemusic.room.entity.Playlist;
 
 import java.util.ArrayList;
 import java.util.List;

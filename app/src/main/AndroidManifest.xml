@@ -60,6 +60,10 @@
             android:name=".service.MusicService"
             android:enabled="true"
             android:exported="false" />
+        <service
+            android:name=".service.VisualizerService"
+            android:enabled="true"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -71,4 +75,5 @@
                 android:resource="@xml/file_paths" />
         </provider>
     </application>
+
 </manifest>

@@ -24,6 +24,9 @@ public class MusicControlReceiver extends BroadcastReceiver {
                 case Definition.NEXT:
                     Log.i(TAG, "Received NEXT");
                     break;
+                default:
+                    Log.i(TAG, "Unknown action: " + action);
+                    break;
             }
         }
     }

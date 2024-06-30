@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -29,12 +28,13 @@ import com.android.simplemusic.R;
 import com.android.simplemusic.adapter.MusicRecyclerAdapter;
 import com.android.simplemusic.application.MainApplication;
 import com.android.simplemusic.bean.Music;
-import com.android.simplemusic.dao.PlaylistDao;
-import com.android.simplemusic.databinding.FragmentLocalmusicBinding;
+import com.android.simplemusic.room.dao.PlaylistDao;
+import com.android.simplemusic.databinding.FragmentLocalMusicBinding;
+import com.android.simplemusic.definition.Definition;
 import com.android.simplemusic.event.MessageEvent;
 import com.android.simplemusic.service.MusicService;
 import com.android.simplemusic.utils.MusicUtils;
-import com.android.simplemusic.view.CustomDialog;
+import com.android.simplemusic.view.dialog.MusicInfoDialog;
 import com.android.simplemusic.vm.MainViewModel;
 
 import org.greenrobot.eventbus.EventBus;
@@ -47,7 +47,7 @@ import java.util.List;
 public class LocalMusicFragment extends Fragment implements ServiceConnection {
     private static final String TAG = LocalMusicFragment.class.getSimpleName();
 
-    private FragmentLocalmusicBinding binding;
+    private FragmentLocalMusicBinding binding;
     private MusicRecyclerAdapter musicRecyclerAdapter;
     private MainViewModel model;
     private MusicService musicService;
@@ -69,21 +69,42 @@ public class LocalMusicFragment extends Fragment implements ServiceConnection {
         playlistDao = MainApplication.getInstance().getPlaylistDatabase().playlistDao();
         // 获取共享偏好
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+        // 绑定ViewModel
+        model = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
+        // 创建MusicRecyclerAdapter
+        musicRecyclerAdapter = new MusicRecyclerAdapter(requireContext(), new ArrayList<Music>());
+        musicRecyclerAdapter.setItemClickListener(new MusicRecyclerAdapter.ItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                Music music = musicRecyclerAdapter.getItem(position);
+                if (music != null) {
+                    model.setIndex(position);
+                    model.setImage(MusicUtils.getAlbumImage(music.getPath()));
+                    musicService.Init(music);
+                    // TODO:add music to db
+                }
+            }
+
+            @Override
+            public void onItemLongClick(int position) {
+                Music musicItem = musicRecyclerAdapter.getItem(position);
+                if (musicItem != null) {
+                    new MusicInfoDialog(requireContext(), musicItem).show();
+                }
+            }
+        });
     }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.i(TAG, "onCreateView");
-        // 绑定ViewModel
-        model = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
         // 初始化binding
-        binding = FragmentLocalmusicBinding.inflate(inflater, container, false);
+        binding = FragmentLocalMusicBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         // 初始化SearchView
         SearchManager searchManager = (SearchManager) requireActivity().getSystemService(Context.SEARCH_SERVICE);
-        binding.svMusic.setIconifiedByDefault(false);
         binding.svMusic.setSearchableInfo(searchManager.getSearchableInfo(requireActivity().getComponentName()));
-        binding.svMusic.setQueryHint(getString(R.string.queryHint));
+        binding.svMusic.setQueryHint(getString(R.string.hint_searchview_music));
         binding.svMusic.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             // 点击搜索按钮时触发该方法
             @Override
@@ -105,36 +126,7 @@ public class LocalMusicFragment extends Fragment implements ServiceConnection {
         // 初始化MusicRecyclerView
         LinearLayoutManager manager = new LinearLayoutManager(requireContext(), RecyclerView.VERTICAL, false);
         binding.rvMusic.setLayoutManager(manager);
-        musicRecyclerAdapter = new MusicRecyclerAdapter(requireContext(), new ArrayList<Music>());
-        musicRecyclerAdapter.setItemClickListener(new MusicRecyclerAdapter.ItemClickListener() {
-            @Override
-            public void onItemClick(int position) {
-                Music music = musicRecyclerAdapter.getItem(position);
-                if (music != null) {
-                    model.setIndex(position);
-                    model.setImage(MusicUtils.getAlbumImage(music.getPath()));
-                    musicService.Init(music);
-                    // TODO:add music to db
-                }
-            }
-
-            @Override
-            public void onItemLongClick(int position) {
-                Music musicItem = musicRecyclerAdapter.getItem(position);
-                if (musicItem != null) {
-                    CustomDialog.MusicInfoDialog(requireContext(), musicItem);
-                }
-            }
-        });
         binding.rvMusic.setAdapter(musicRecyclerAdapter);
-        model.getMusicList().observe(getViewLifecycleOwner(), new Observer<List<Music>>() {
-            @Override
-            public void onChanged(List<Music> musicList) {
-                Log.i(TAG, "MusicList in viewmodel changed, prepare to set music list. New size is: "
-                        + musicList.size());
-                setMusicData(musicList);
-            }
-        });
         return root;
     }
 
@@ -142,6 +134,9 @@ public class LocalMusicFragment extends Fragment implements ServiceConnection {
     public void onResume() {
         Log.i(TAG, "onResume");
         super.onResume();
+        if (musicRecyclerAdapter != null) {
+            Log.i(TAG, String.valueOf(musicRecyclerAdapter.getItemCount()));
+        }
     }
 
     @Override
@@ -155,6 +150,12 @@ public class LocalMusicFragment extends Fragment implements ServiceConnection {
         Log.i(TAG, "onDestroyView");
         super.onDestroyView();
         binding = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // 注销EventBus
         EventBus.getDefault().unregister(this);
     }
 
@@ -175,10 +176,15 @@ public class LocalMusicFragment extends Fragment implements ServiceConnection {
         String message = messageEvent.getMessage();
         if (message != null) {
             Log.i(TAG, "Received MessageEvent, message is " + message);
+            if (message.equals(Definition.UPDATE_MUSIC_LIST)) {
+                if (model.getMusicList().getValue() != null) {
+                    setMusicList(model.getMusicList().getValue());
+                }
+            }
         }
     }
 
-    private void setMusicData(List<Music> musicList) {
+    private void setMusicList(List<Music> musicList) {
         int scrollPosition = 0;
         RecyclerView.LayoutManager layoutManager = binding.rvMusic.getLayoutManager();
         if (layoutManager instanceof LinearLayoutManager) {

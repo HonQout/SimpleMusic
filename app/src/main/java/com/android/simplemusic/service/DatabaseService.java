@@ -11,15 +11,13 @@ import com.android.simplemusic.bean.Music;
 
 import java.util.ArrayList;
 
-public class MusicAssignService extends Service {
-    private static final String TAG = "MusicAssignService";
-    private ArrayList<Music> musicList;
+public class DatabaseService extends Service {
+    private static final String TAG = DatabaseService.class.getSimpleName();
 
     @Override
     public void onCreate() {
         Log.i(TAG, "onCreate");
         super.onCreate();
-        musicList = new ArrayList<Music>();
     }
 
     @Nullable

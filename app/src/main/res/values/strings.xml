@@ -8,7 +8,7 @@
     <string name="authorize">Grant</string>
     <string name="exit">Exit</string>
     <string name="menu_search">Search</string>
-    <string name="queryHint">Song or Artist</string>
+    <string name="hint_searchview_music">Song or Artist</string>
     <string name="use_preset">Use preset</string>
     <string name="reset">Reset</string>
     <string name="not_playing">Not Playing</string>
@@ -46,7 +46,7 @@
     <string name="user_interface">User‘s Interface</string>
     <string name="theme_color">Theme Color</string>
     <string name="night_mode">Night Mode</string>
-    <string name="immersion_navigation_bar">Immersion Bar</string>
+    <string name="immersion_navigation_bar">Immersion Navigation Bar</string>
     <string name="immersion_status_bar">Immersion Status Bar</string>
     <string name="immersion_hint">Only works when night mode is disabled</string>
 
@@ -84,7 +84,6 @@
     <string name="grant_permission_hint_10">Please grant this application access to \"Media and File\" in \"Permission\" page.</string>
     <string name="grant_permission_hint_13">Please grant this application access to \"Music and Audio\" in \"Permission\" page.</string>
     <string name="delete">Delete</string>
-
-
-
+    <string name="strong_scan_mode_hint">Scan music files every time when you come back to this application from multi-task interface.</string>
+    <string name="strong_scan_mode">Strong Scan Mode</string>
 </resources>

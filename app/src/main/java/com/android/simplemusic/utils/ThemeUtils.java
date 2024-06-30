@@ -13,16 +13,15 @@ public abstract class ThemeUtils {
     public boolean isNightModeEnabled;
 
     public ThemeUtils(@NonNull Context context) {
-        initThemeSetting(context);
-        refreshUI(isNightModeEnabled);
+        onThemeSettingChanged(context);
     }
 
     private void initThemeSetting(@NonNull Context context) {
         uiMode = context.getApplicationContext().getResources().getConfiguration().uiMode;
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         nightMode = sharedPreferences.getString("night_mode", "follow_system");
-        isNightModeEnabled = nightMode.equals("on") ||
-                (nightMode.equals("follow_system") && ((uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES));
+        isNightModeEnabled = nightMode.equals("on") || (nightMode.equals("follow_system")
+                && ((uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES));
     }
 
     private void refreshUI(boolean isNightModeEnabled) {
@@ -33,7 +32,7 @@ public abstract class ThemeUtils {
         }
     }
 
-    public void onThemeSettingChanged(@NonNull Context context){
+    public void onThemeSettingChanged(@NonNull Context context) {
         initThemeSetting(context);
         refreshUI(isNightModeEnabled);
     }

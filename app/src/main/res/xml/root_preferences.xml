@@ -55,6 +55,12 @@
             app:seekBarIncrement="10"
             app:showSeekBarValue="true"
             app:title="@string/filter_small_audio" />
+        <SwitchPreferenceCompat
+            android:summary="@string/strong_scan_mode_hint"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"
+            app:key="strong_scan_mode"
+            app:title="@string/strong_scan_mode"/>
     </PreferenceCategory>
 
     <PreferenceCategory

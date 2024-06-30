@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/dockbar_root"
+    android:id="@+id/dock_bar"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
     <ImageView
-        android:id="@+id/dockbar_pic"
+        android:id="@+id/dock_bar_pic"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_alignParentStart="true"
-        android:layout_marginStart="5dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp"
+        android:layout_margin="5dp"
         android:contentDescription="@string/app_name"
         android:src="@drawable/record" />
 
@@ -19,12 +17,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:layout_toStartOf="@+id/dockbar_prev"
-        android:layout_toEndOf="@+id/dockbar_pic"
+        android:layout_toStartOf="@+id/dock_bar_prev"
+        android:layout_toEndOf="@+id/dock_bar_pic"
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/dockbar_song"
+            android:id="@+id/dock_bar_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
@@ -36,7 +34,7 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/dockbar_singer"
+            android:id="@+id/dock_bar_artist"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
@@ -48,29 +46,29 @@
     </LinearLayout>
 
     <ImageButton
-        android:id="@+id/dockbar_prev"
+        android:id="@+id/dock_bar_prev"
         android:layout_width="wrap_content"
         android:layout_height="50dp"
-        android:layout_marginTop="5dp"
-        android:layout_toStartOf="@+id/dockbar_play_state"
+        android:layout_centerVertical="true"
+        android:layout_toStartOf="@+id/dock_bar_play"
         android:contentDescription="@string/app_name"
         android:src="@drawable/prev_black" />
 
     <ImageButton
-        android:id="@+id/dockbar_play_state"
+        android:id="@+id/dock_bar_play"
         android:layout_width="wrap_content"
         android:layout_height="50dp"
-        android:layout_marginTop="5dp"
-        android:layout_toStartOf="@+id/dockbar_next"
+        android:layout_centerVertical="true"
+        android:layout_toStartOf="@+id/dock_bar_next"
         android:contentDescription="@string/app_name"
         android:src="@drawable/play_black" />
 
     <ImageButton
-        android:id="@+id/dockbar_next"
+        android:id="@+id/dock_bar_next"
         android:layout_width="wrap_content"
         android:layout_height="50dp"
         android:layout_alignParentEnd="true"
-        android:layout_marginTop="5dp"
+        android:layout_centerVertical="true"
         android:layout_marginEnd="5dp"
         android:contentDescription="@string/app_name"
         android:src="@drawable/next_black" />

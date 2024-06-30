@@ -1,11 +1,11 @@
-package com.android.simplemusic.entity;
+package com.android.simplemusic.room.entity;
 
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
 import com.android.simplemusic.bean.Music;
-import com.android.simplemusic.db.MusicItemConverter;
+import com.android.simplemusic.room.converter.MusicItemConverter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +58,11 @@ public class Playlist {
         return content;
     }
 
-    public boolean addMusic(int position, Music music) {
+    public boolean addMusic(Music music) {
+        return addMusic(music, content.size());
+    }
+
+    public boolean addMusic(Music music, int position) {
         if (content == null) {
             content = new ArrayList<Music>();
         }

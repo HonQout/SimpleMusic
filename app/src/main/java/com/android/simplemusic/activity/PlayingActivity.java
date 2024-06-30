@@ -11,12 +11,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.LinearLayout;
 import android.widget.SeekBar;
-import android.widget.Spinner;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -34,6 +29,7 @@ import com.android.simplemusic.service.MusicService;
 import com.android.simplemusic.utils.ColorUtils;
 import com.android.simplemusic.utils.MusicUtils;
 import com.android.simplemusic.utils.ThemeUtils;
+import com.android.simplemusic.view.dialog.EqualizerDialog;
 import com.android.simplemusic.vm.MainViewModel;
 
 import org.greenrobot.eventbus.EventBus;
@@ -41,7 +37,6 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
-import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -170,90 +165,40 @@ public class PlayingActivity extends AppCompatActivity {
         binding.ibEq.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder eqdBuilder = new AlertDialog.Builder(PlayingActivity.this);
-                eqdBuilder.setIcon(R.mipmap.equalizer);
-                eqdBuilder.setTitle(getString(R.string.equalizer));
-                LinearLayout linearLayout = new LinearLayout(PlayingActivity.this);
-                linearLayout.setOrientation(LinearLayout.VERTICAL);
-                // “使用预设”行
-                View eq_top = View.inflate(PlayingActivity.this, R.layout.equalizer_top, null);
-                TextView textView_ps = eq_top.findViewById(R.id.equalizer_top_hint);
-                Spinner spinner_ps = eq_top.findViewById(R.id.equalizer_top_spinner);
-                textView_ps.setText(R.string.use_preset);
-                ArrayList<String> eqPresets = musicService.getAllPresets();
-                ArrayAdapter<String> eqSpAdapter = new ArrayAdapter<String>(PlayingActivity.this, R.layout.spinner_item_select, eqPresets);
-                eqSpAdapter.setDropDownViewResource(R.layout.spinner_item_dropdown);
-                spinner_ps.setAdapter(eqSpAdapter);
-                spinner_ps.setSelection(musicService.getCurrentPreset());
-                Log.i(TAG, "Current Preset is " + String.valueOf(musicService.getCurrentPreset()));
-                linearLayout.addView(eq_top);
-                // 获取Equalizer
-                final short minEqualizer = musicService.getMinBandLevel();
-                final short maxEqualizer = musicService.getMaxBandLevel();
-                ArrayList<SeekBar> seekBars = new ArrayList<SeekBar>();
-                for (short i = 0; i < musicService.getNumBands(); i++) {
-                    final short band = i;
-                    View eq_unit = View.inflate(PlayingActivity.this, R.layout.equalizer_unit, null);
-                    TextView textView1 = eq_unit.findViewById(R.id.equalizer_unit_minEq);
-                    TextView textView2 = eq_unit.findViewById(R.id.equalizer_unit_freq);
-                    TextView textView3 = eq_unit.findViewById(R.id.equalizer_unit_maxEq);
-                    SeekBar seekBar = eq_unit.findViewById(R.id.equalizer_unit_seekbar);
-                    textView1.setText(String.format(Locale.US, "%ddB", minEqualizer / 100));
-                    textView2.setText(String.format(Locale.US, "%dHz", musicService.getCenterFreq(band) / 1000));
-                    textView3.setText(String.format(Locale.US, "%ddB", maxEqualizer / 100));
-                    seekBar.setMax((int) (maxEqualizer - minEqualizer));
-                    Log.i("Equalizer", String.format("band %d is %d", (int) band, (int) musicService.getBandLevel(band)));
-                    seekBar.setProgress(musicService.getBandLevel(band) - minEqualizer);
-                    seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                        public void onStopTrackingTouch(SeekBar seekBar) {
+                AlertDialog alertDialog = new EqualizerDialog(PlayingActivity.this) {
 
-                        }
-
-                        public void onStartTrackingTouch(SeekBar seekBar) {
-
-                        }
-
-                        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                            if (fromUser) {
-                                Log.i("Equalizer", String.format("set band %d to %d + %d", (int) band, (int) progress, (int) minEqualizer));
-                                musicService.setBandLevel(band, (short) (progress + minEqualizer));
-                            }
-                        }
-                    });
-                    seekBars.add(seekBar);
-                    linearLayout.addView(eq_unit);
-                }
-                spinner_ps.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                     @Override
-                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    public void onSeekBarChange(short band, short level) {
+                        Log.i("Equalizer", String.format("set band %d to %d", (int) band, (int) level));
+                        musicService.getEqualizer().setBandLevel(band, level);
+                    }
+
+                    @Override
+                    public void onSpinnerChange(int position, ArrayList<SeekBar> seekBars, int minBandLevel) {
                         Log.i(TAG, String.format("Selected preset item %d", position));
-                        musicService.usePreset((short) position);
-                        for (short i = 0; i < musicService.getNumBands(); i++) {
-                            seekBars.get((int) i).setProgress(musicService.getBandLevel(i) - minEqualizer);
+                        musicService.getEqualizer().usePreset((short) position);
+                        for (short i = 0; i < musicService.getEqualizer().getNumberOfBands(); i++) {
+                            seekBars.get((int) i).setProgress(musicService.getEqualizer().getBandLevel(i) - minBandLevel);
                         }
                         Log.i(TAG, String.format("Not first use, set preset %d", position));
                     }
 
                     @Override
-                    public void onNothingSelected(AdapterView<?> parent) {
-
-                    }
-                });
-                eqdBuilder.setView(linearLayout);
-                eqdBuilder.setPositiveButton(R.string.confirm, null);
-                eqdBuilder.setNeutralButton(R.string.reset, null);
-                AlertDialog eqDialog = eqdBuilder.create();
-                eqDialog.show();
-                eqDialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        musicService.resetEqSet();
-                        Log.i("Equalizer", String.format("Number of presets is %d", (int) musicService.getNumPresets()));
-                        for (short i = 0; i < musicService.getNumBands(); i++) {
-                            seekBars.get((int) i).setProgress(musicService.getBandLevel(i) - minEqualizer);
+                    public void onResetClick(ArrayList<SeekBar> seekBars, int minBandLevel) {
+                        musicService.getEqualizer().reset();
+                        for (short i = 0; i < musicService.getEqualizer().getNumberOfBands(); i++) {
+                            seekBars.get((int) i).setProgress(musicService.getEqualizer().getBandLevel(i) - minBandLevel);
                         }
                     }
-                });
+                }
+                        .setPresets(musicService.getEqualizer().getPresetNames())
+                        .setSelection(musicService.getEqualizer().getCurrentPreset())
+                        .setNumBands(musicService.getEqualizer().getNumberOfBands())
+                        .setMinBandLevel(musicService.getEqualizer().getMinBandLevel())
+                        .setCenterFrequencies(musicService.getEqualizer().getCenterFrequencies())
+                        .setMaxBandLevel(musicService.getEqualizer().getMaxBandLevel())
+                        .create();
+                alertDialog.show();
             }
         });
     }

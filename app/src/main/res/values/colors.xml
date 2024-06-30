@@ -13,4 +13,8 @@
     <color name="grey">#FF7F7F7F</color>
     <color name="light_grey">#FFD3D3D3</color>
     <color name="text">#FF000000</color>
+
+    <!-- Local Music Fragment -->
+    <color name="music_name">#FF000000</color>
+    <color name="music_info">#FF7F7F7F</color>
 </resources>

@@ -114,13 +114,16 @@ public class MusicUtils {
 
     @Nullable
     public static Bitmap getAlbumImage(@NonNull String path) {
-        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        retriever.setDataSource(path);
-        byte[] bytes = retriever.getEmbeddedPicture();
-        if (bytes != null) {
-            return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        } else {
-            return null;
+        try {
+            MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+            retriever.setDataSource(path);
+            byte[] bytes = retriever.getEmbeddedPicture();
+            if (bytes != null) {
+                return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+            }
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
         }
+        return null;
     }
 }

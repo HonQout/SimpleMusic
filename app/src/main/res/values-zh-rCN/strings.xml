@@ -9,7 +9,7 @@
     <string name="exit">退出</string>
     <string name="menu_search">搜索</string>
     <string name="settings">设置</string>
-    <string name="queryHint">歌曲或艺术家</string>
+    <string name="hint_searchview_music">歌曲或艺术家</string>
     <string name="equalizer">均衡器</string>
     <string name="use_preset">使用预设值</string>
     <string name="reset">重设</string>
@@ -65,4 +65,6 @@
     <string name="immersion_hint">仅在夜间模式关闭时生效</string>
     <string name="scan">扫描</string>
     <string name="filter_small_audio">过滤小音频（KB）</string>
+    <string name="strong_scan_mode_hint">每次从多任务界面回到此应用时都扫描音乐文件。</string>
+    <string name="strong_scan_mode">强扫描模式</string>
 </resources>

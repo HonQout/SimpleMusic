@@ -1,4 +1,4 @@
-package com.android.simplemusic.db;
+package com.android.simplemusic.room.converter;
 
 import androidx.room.TypeConverter;
 

@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
-import android.media.audiofx.Visualizer;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
@@ -26,7 +25,6 @@ import com.android.simplemusic.bean.Music;
 import com.android.simplemusic.bean.MyEqualizer;
 import com.android.simplemusic.definition.Definition;
 import com.android.simplemusic.event.MessageEvent;
-import com.android.simplemusic.intent.MusicIntent;
 import com.android.simplemusic.utils.FileUtils;
 
 import org.greenrobot.eventbus.EventBus;
@@ -34,13 +32,15 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Objects;
 
 public class MusicService extends Service {
     private static final String TAG = MusicService.class.getSimpleName();
     private static final String NOTIFICATION_MUSIC_ID = "Simple_Music";
     private static final int NOTIFICATION_ID = 1;
+    public static final Intent intentPrev = new Intent(Definition.PREV);
+    public static final Intent intentPlayPause = new Intent(Definition.PLAY_PAUSE);
+    public static final Intent intentNext = new Intent(Definition.NEXT);
+    public static final Intent intentStop = new Intent(Definition.STOP);
 
     private String currentState;
     private Music currentMusic = null;
@@ -52,9 +52,7 @@ public class MusicService extends Service {
     private PendingIntent pIntent;
     private Notification notification;
     private MusicControlReceiver mcr;
-    private Visualizer visualizer;
-    private byte[] waveformData;
-    private byte[] fftData;
+
 
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
@@ -123,9 +121,9 @@ public class MusicService extends Service {
         }
         equalizer.init();
         // 注册待定意图
-        PendingIntent piPrev = PendingIntent.getBroadcast(this, 0, MusicIntent.intentPrev, PendingIntent.FLAG_IMMUTABLE);
-        PendingIntent piPlayPause = PendingIntent.getBroadcast(this, 0, MusicIntent.intentPlayPause, PendingIntent.FLAG_IMMUTABLE);
-        PendingIntent piNext = PendingIntent.getBroadcast(this, 0, MusicIntent.intentNext, PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent piPrev = PendingIntent.getBroadcast(this, 0, intentPrev, PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent piPlayPause = PendingIntent.getBroadcast(this, 0, intentPlayPause, PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent piNext = PendingIntent.getBroadcast(this, 0, intentNext, PendingIntent.FLAG_IMMUTABLE);
         // 注册广播接收器
         notification = new NotificationCompat.Builder(MusicService.this, NOTIFICATION_MUSIC_ID)
                 .setContentTitle(music.getTitle())
@@ -246,64 +244,8 @@ public class MusicService extends Service {
         }
     }
 
-    public short getNumBands() {
-        return equalizer.getNumberOfBands();
-    }
-
-    public short getMinBandLevel() {
-        return equalizer.getBandLevelRange()[0];
-    }
-
-    public short getMaxBandLevel() {
-        return equalizer.getBandLevelRange()[1];
-    }
-
-    public short getBandLevel(short band) {
-        return equalizer.getBandLevel(band);
-    }
-
-    public void setBandLevel(short band, short level) {
-        equalizer.setBandLevel(band, level);
-    }
-
-    public int getCenterFreq(short band) {
-        return equalizer.getCenterFreq(band);
-    }
-
-    public short getNumPresets() {
-        return equalizer.getNumberOfPresets();
-    }
-
-    public String getPresetName(short preset) {
-        return equalizer.getPresetName(preset);
-    }
-
-    public ArrayList<String> getAllPresets() {
-        ArrayList<String> allPresets = new ArrayList<String>();
-        for (short i = 0; i < equalizer.getNumberOfPresets(); i++) {
-            allPresets.add(equalizer.getPresetName(i));
-        }
-        return allPresets;
-    }
-
-    public short getCurrentPreset() {
-        return equalizer.getCurrentPreset();
-    }
-
-    public void usePreset(short preset) {
-        equalizer.usePreset(preset);
-    }
-
-    public void resetEqSet() {
-        equalizer.reset();
-    }
-
-    public byte[] getWaveformData() {
-        return waveformData;
-    }
-
-    public byte[] getFftData() {
-        return fftData;
+    public MyEqualizer getEqualizer() {
+        return equalizer;
     }
 
     public class MusicBinder extends Binder {
@@ -373,60 +315,30 @@ public class MusicService extends Service {
         }
     }
 
-    public void initializeVisualizer() {
-        // 初始化visualizer
-        visualizer = new Visualizer(mediaPlayer.getAudioSessionId());
-        visualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[0]);
-        visualizer.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
-            @Override
-            public void onWaveFormDataCapture(Visualizer visualizer, byte[] waveform, int samplingRate) {
-                waveformData = waveform;
-                EventBus.getDefault().post(new MessageEvent(Definition.VISUALIZER_DATA_UPDATE, "WaveForm"));
-            }
-
-            @Override
-            public void onFftDataCapture(Visualizer visualizer, byte[] fft, int samplingRate) {
-                fftData = fft;
-                EventBus.getDefault().post(new MessageEvent(Definition.VISUALIZER_DATA_UPDATE, "Fft"));
-            }
-        }, Visualizer.getMaxCaptureRate() / 2, true, false);
-        visualizer.setEnabled(true);
-        Log.i(TAG, "Visualizer initialized");
-    }
-
     // 处理EventBus事件
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void handleEvent(MessageEvent messageEvent) {
         String message = messageEvent.getMessage();
-        switch (message) {
-            case Definition.PERMISSION_ACQUIRED:
-                Log.i(TAG, "Received PERMISSION_ACQUIRED");
-                String content = (String) messageEvent.getContent();
-                if (Objects.equals(content, Definition.RECORD_AUDIO)) {
-                    if (visualizer == null) {
-                        initializeVisualizer();
-                    }
-                }
-                break;
-            case Definition.PREV:
-                Log.i(TAG, "Received PREV");
-                break;
-            case Definition.PLAY_PAUSE:
-                Log.i(TAG, "Received PLAY_PAUSE");
-                Play_Pause();
-                break;
-            case Definition.NEXT:
-                Log.i(TAG, "Received NEXT");
-                break;
-            case Definition.STOP:
-                Log.i(TAG, "Received STOP");
-                break;
-            case Definition.CYCLE_CHANGE:
-                Log.i(TAG, "Received CYCLE_CHANGE");
-                changeCycleMode();
-                break;
-            default:
-                break;
+        if (message != null) {
+            Log.i(TAG, "Received EventBus message " + message);
+            switch (message) {
+                case Definition.PERMISSION_ACQUIRED:
+                    break;
+                case Definition.PREV:
+                    break;
+                case Definition.PLAY_PAUSE:
+                    Play_Pause();
+                    break;
+                case Definition.NEXT:
+                    break;
+                case Definition.STOP:
+                    break;
+                case Definition.CYCLE_CHANGE:
+                    changeCycleMode();
+                    break;
+                default:
+                    break;
+            }
         }
     }
 }

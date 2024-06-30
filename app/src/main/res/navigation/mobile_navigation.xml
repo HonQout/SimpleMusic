@@ -9,7 +9,7 @@
         android:id="@+id/navigation_LocalMusic"
         android:name="com.android.simplemusic.fragment.localmusic.LocalMusicFragment"
         android:label="@string/title_LocalMusic"
-        tools:layout="@layout/fragment_localmusic" />
+        tools:layout="@layout/fragment_local_music" />
 
     <fragment
         android:id="@+id/navigation_Playlist"

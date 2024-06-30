@@ -1,4 +1,4 @@
-package com.android.simplemusic.view;
+package com.android.simplemusic.view.dialog;
 
 import android.content.Context;
 import android.view.View;
@@ -11,8 +11,10 @@ import com.android.simplemusic.R;
 import com.android.simplemusic.bean.Music;
 import com.android.simplemusic.utils.MusicUtils;
 
-public class CustomDialog {
-    public static void MusicInfoDialog(@NonNull Context context, @NonNull Music music) {
+public class MusicInfoDialog {
+    private AlertDialog dialog;
+
+    public MusicInfoDialog(@NonNull Context context, @NonNull Music music) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setIcon(R.mipmap.ic_launcher);
         builder.setTitle(R.string.music_info);
@@ -35,6 +37,10 @@ public class CustomDialog {
         mid_size.setText(MusicUtils.formatSize(music.getSize()));
         builder.setView(view);
         builder.setPositiveButton(R.string.confirm, null);
-        builder.create().show();
+        dialog = builder.create();
+    }
+
+    public void show() {
+        dialog.show();
     }
 }

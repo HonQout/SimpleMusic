@@ -47,7 +47,6 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -180,6 +179,27 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "Bound to Music Service");
         // 绑定ViewModel
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
+        viewModel.getMusicList().observe(this, new Observer<List<Music>>() {
+            @Override
+            public void onChanged(List<Music> musicList) {
+                if (musicList != null) {
+                    Log.i(TAG, "MusicList in viewmodel changed, prepare to set music list. New size is: "
+                            + musicList.size());
+                    EventBus.getDefault().post(new MessageEvent(Definition.UPDATE_MUSIC_LIST));
+                }
+            }
+        });
+        viewModel.getImage().observe(this, new Observer<Bitmap>() {
+            @Override
+            public void onChanged(Bitmap bitmap) {
+                if (bitmap != null) {
+                    binding.dockBar.setImageViewBitmap(bitmap);
+                } else {
+                    binding.dockBar.setImageViewDrawable(ResourcesCompat.getDrawable(getResources(),
+                            R.drawable.record, null));
+                }
+            }
+        });
         if (viewModel.getImage().getValue() != null) {
             binding.dockBar.setImageViewBitmap(viewModel.getImage().getValue());
         } else {
@@ -198,27 +218,21 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "onResume");
         super.onResume();
         if (PermissionUtils.checkStoragePermission(this)) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    List<Music> musicList = getMusicList();
-                    viewModel.setMusicList(musicList);
-                }
-            }).start();
+            if (viewModel.getMusicList().getValue() == null || sharedPreferences.getBoolean("strong_scan_mode", false)) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        int minDuration = sharedPreferences.getInt("filter_short_audio", 0);
+                        int minSize = sharedPreferences.getInt("filter_small_audio", 0);
+                        List<Music> musicList = MusicUtils.getMusicData(MainActivity.this, minDuration, minSize);
+                        Log.i(TAG, "Got music data, size is: " + musicList.size());
+                        viewModel.setMusicList(musicList);
+                    }
+                }).start();
+            }
         } else { //请求权限
             PermissionUtils.requestStoragePermission(this, REQUEST_CODE);
         }
-        viewModel.getImage().observe(this, new Observer<Bitmap>() {
-            @Override
-            public void onChanged(Bitmap bitmap) {
-                if (bitmap != null) {
-                    binding.dockBar.setImageViewBitmap(bitmap);
-                } else {
-                    binding.dockBar.setImageViewDrawable(ResourcesCompat.getDrawable(getResources(),
-                            R.drawable.record, null));
-                }
-            }
-        });
     }
 
     @Override
@@ -411,18 +425,5 @@ public class MainActivity extends AppCompatActivity {
             default:
                 break;
         }
-    }
-
-    public List<Music> getMusicList() {
-        List<Music> musicList = new ArrayList<Music>();
-        if (PermissionUtils.checkStoragePermission(this)) {
-            int minDuration = sharedPreferences.getInt("filter_short_audio", 0);
-            int minSize = sharedPreferences.getInt("filter_small_audio", 0);
-            musicList = MusicUtils.getMusicData(this, minDuration, minSize);
-            Log.i(TAG, "Got music data, size is: " + musicList.size());
-        } else {
-            Log.i(TAG, "Cannot get music data: no access to storage");
-        }
-        return musicList;
     }
 }
