@@ -1,6 +1,7 @@
 package com.android.simplemusic.definition;
 
 public class Definition {
+    public static final String SEARCH = "search";
     public static final String INIT = "init";
     public static final String PLAY = "play";
     public static final String PAUSE = "pause";
@@ -23,4 +24,5 @@ public class Definition {
     public static final String SERVICE_DISCONNECTED = "service_disconnected";
     public static final String THEME = "theme";
     public static final String VISUALIZER_DATA_UPDATE = "visualizer_data_update";
+    public static final String REQUEST_UPDATE_MUSIC_LIST = "request_update_music_list";
 }

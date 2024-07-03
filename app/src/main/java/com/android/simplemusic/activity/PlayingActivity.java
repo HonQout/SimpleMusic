@@ -30,7 +30,7 @@ import com.android.simplemusic.utils.ColorUtils;
 import com.android.simplemusic.utils.MusicUtils;
 import com.android.simplemusic.utils.ThemeUtils;
 import com.android.simplemusic.view.dialog.EqualizerDialog;
-import com.android.simplemusic.vm.MainViewModel;
+import com.android.simplemusic.viewmodel.MainViewModel;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;

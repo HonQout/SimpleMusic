@@ -1,4 +1,4 @@
-package com.android.simplemusic.vm;
+package com.android.simplemusic.viewmodel;
 
 import android.graphics.Bitmap;
 

@@ -17,13 +17,13 @@ import androidx.annotation.NonNull;
 import com.android.simplemusic.R;
 
 public class DockBar extends RelativeLayout {
+    private RelativeLayout dock_bar;
     private ImageView imageView;
     private TextView textView1;
     private TextView textView2;
     private ImageButton imageButton1;
     private ImageButton imageButton2;
     private ImageButton imageButton3;
-    private RelativeLayout dockbar_root;
 
     public DockBar(Context context) {
         super(context);
@@ -47,13 +47,13 @@ public class DockBar extends RelativeLayout {
 
     private void initView(Context context) {
         View view = LayoutInflater.from(context).inflate(R.layout.dock_bar, this, true);
+        dock_bar = (RelativeLayout) view.findViewById(R.id.dock_bar);
         imageView = (ImageView) view.findViewById(R.id.dock_bar_pic);
         textView1 = (TextView) view.findViewById(R.id.dock_bar_title);
         textView2 = (TextView) view.findViewById(R.id.dock_bar_artist);
         imageButton1 = (ImageButton) view.findViewById(R.id.dock_bar_prev);
         imageButton2 = (ImageButton) view.findViewById(R.id.dock_bar_play);
         imageButton3 = (ImageButton) view.findViewById(R.id.dock_bar_next);
-        dockbar_root = (RelativeLayout) view.findViewById(R.id.dock_bar);
     }
 
     @Override

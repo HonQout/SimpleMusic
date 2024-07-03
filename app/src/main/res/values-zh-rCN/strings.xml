@@ -67,4 +67,5 @@
     <string name="filter_small_audio">过滤小音频（KB）</string>
     <string name="strong_scan_mode_hint">每次从多任务界面回到此应用时都扫描音乐文件。</string>
     <string name="strong_scan_mode">强扫描模式</string>
+    <string name="search">搜索</string>
 </resources>

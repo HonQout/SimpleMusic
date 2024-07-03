@@ -8,14 +8,23 @@
     tools:context=".fragment.localmusic.LocalMusicFragment">
 
     <androidx.appcompat.widget.SearchView
-        android:id="@+id/sv_music"
-        android:layout_width="wrap_content"
+        android:id="@+id/sv_local_music"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:touchscreenBlocksFocus="true"
+        android:visibility="gone"
+        app:autoShowKeyboard="true"
         app:iconifiedByDefault="true" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_music"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/srl_local_music"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_local_music"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </LinearLayout>

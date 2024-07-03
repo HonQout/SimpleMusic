@@ -8,6 +8,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.text.TextUtils;
 import android.util.Log;
@@ -23,6 +24,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.android.simplemusic.R;
 import com.android.simplemusic.adapter.MusicRecyclerAdapter;
@@ -35,7 +37,7 @@ import com.android.simplemusic.event.MessageEvent;
 import com.android.simplemusic.service.MusicService;
 import com.android.simplemusic.utils.MusicUtils;
 import com.android.simplemusic.view.dialog.MusicInfoDialog;
-import com.android.simplemusic.vm.MainViewModel;
+import com.android.simplemusic.viewmodel.MainViewModel;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -48,8 +50,9 @@ public class LocalMusicFragment extends Fragment implements ServiceConnection {
     private static final String TAG = LocalMusicFragment.class.getSimpleName();
 
     private FragmentLocalMusicBinding binding;
-    private MusicRecyclerAdapter musicRecyclerAdapter;
+    private Handler handler = new Handler();
     private MainViewModel model;
+    private MusicRecyclerAdapter musicRecyclerAdapter;
     private MusicService musicService;
     private PlaylistDao playlistDao;
     private SharedPreferences sharedPreferences;
@@ -101,11 +104,24 @@ public class LocalMusicFragment extends Fragment implements ServiceConnection {
         // 初始化binding
         binding = FragmentLocalMusicBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+        // 初始化SwipeRefreshLayout
+        binding.srlLocalMusic.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        EventBus.getDefault().post(new MessageEvent(Definition.REQUEST_UPDATE_MUSIC_LIST));
+                        binding.srlLocalMusic.setRefreshing(false);
+                    }
+                });
+            }
+        });
         // 初始化SearchView
         SearchManager searchManager = (SearchManager) requireActivity().getSystemService(Context.SEARCH_SERVICE);
-        binding.svMusic.setSearchableInfo(searchManager.getSearchableInfo(requireActivity().getComponentName()));
-        binding.svMusic.setQueryHint(getString(R.string.hint_searchview_music));
-        binding.svMusic.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        binding.svLocalMusic.setSearchableInfo(searchManager.getSearchableInfo(requireActivity().getComponentName()));
+        binding.svLocalMusic.setQueryHint(getString(R.string.hint_searchview_music));
+        binding.svLocalMusic.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             // 点击搜索按钮时触发该方法
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -123,10 +139,18 @@ public class LocalMusicFragment extends Fragment implements ServiceConnection {
                 return false;
             }
         });
+        // 初始化SearchView
+        binding.svLocalMusic.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                binding.svLocalMusic.setVisibility(View.GONE);
+                return false;
+            }
+        });
         // 初始化MusicRecyclerView
         LinearLayoutManager manager = new LinearLayoutManager(requireContext(), RecyclerView.VERTICAL, false);
-        binding.rvMusic.setLayoutManager(manager);
-        binding.rvMusic.setAdapter(musicRecyclerAdapter);
+        binding.rvLocalMusic.setLayoutManager(manager);
+        binding.rvLocalMusic.setAdapter(musicRecyclerAdapter);
         return root;
     }
 
@@ -171,28 +195,43 @@ public class LocalMusicFragment extends Fragment implements ServiceConnection {
         musicService = null;
     }
 
+    // 处理EventBus事件
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void handleEvent(MessageEvent messageEvent) {
         String message = messageEvent.getMessage();
         if (message != null) {
-            Log.i(TAG, "Received MessageEvent, message is " + message);
-            if (message.equals(Definition.UPDATE_MUSIC_LIST)) {
-                if (model.getMusicList().getValue() != null) {
-                    setMusicList(model.getMusicList().getValue());
-                }
+            Log.i(TAG, "Received Message " + message);
+            switch (message) {
+                case Definition.UPDATE_MUSIC_LIST:
+                    if (model.getMusicList().getValue() != null) {
+                        setMusicList(model.getMusicList().getValue());
+                    }
+                    break;
+                case Definition.SEARCH:
+                    int visibility = binding.svLocalMusic.getVisibility();
+                    if (visibility == View.VISIBLE) {
+                        binding.svLocalMusic.setQuery("", true);
+                        binding.svLocalMusic.clearFocus();
+                        binding.svLocalMusic.setIconified(true);
+                        binding.svLocalMusic.setVisibility(View.GONE);
+                    } else {
+                        binding.svLocalMusic.setVisibility(View.VISIBLE);
+                        binding.svLocalMusic.setIconified(false);
+                        binding.svLocalMusic.requestFocus();
+                    }
             }
         }
     }
 
     private void setMusicList(List<Music> musicList) {
         int scrollPosition = 0;
-        RecyclerView.LayoutManager layoutManager = binding.rvMusic.getLayoutManager();
+        RecyclerView.LayoutManager layoutManager = binding.rvLocalMusic.getLayoutManager();
         if (layoutManager instanceof LinearLayoutManager) {
             LinearLayoutManager linearLayoutManager = (LinearLayoutManager) layoutManager;
             scrollPosition = linearLayoutManager.findLastVisibleItemPosition();
         }
         musicRecyclerAdapter.setMusicList(musicList);
-        layoutManager = binding.rvMusic.getLayoutManager();
+        layoutManager = binding.rvLocalMusic.getLayoutManager();
         if (layoutManager != null) {
             layoutManager.scrollToPosition(scrollPosition);
         }

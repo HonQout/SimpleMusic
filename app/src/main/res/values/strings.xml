@@ -1,9 +1,18 @@
 <resources>
     <string name="app_name">Simple Music</string>
-    <string name="title_LocalMusic">Local Music</string>
-    <string name="title_Playlist">Playlist</string>
+
+
     <string name="music_channel">Music</string>
     <string name="default_time" translatable="false">0:00</string>
+
+    <!-- Activity: MainActivity -->
+    <string name="search">Search</string>
+
+    <!-- Fragment: LocalMusic -->
+    <string name="title_LocalMusic">Local Music</string>
+
+    <!-- Fragment: Playlist -->
+    <string name="title_Playlist">Playlist</string>
 
     <string name="authorize">Grant</string>
     <string name="exit">Exit</string>
@@ -86,4 +95,5 @@
     <string name="delete">Delete</string>
     <string name="strong_scan_mode_hint">Scan music files every time when you come back to this application from multi-task interface.</string>
     <string name="strong_scan_mode">Strong Scan Mode</string>
+
 </resources>

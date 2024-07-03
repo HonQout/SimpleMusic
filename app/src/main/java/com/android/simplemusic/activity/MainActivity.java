@@ -40,7 +40,7 @@ import com.android.simplemusic.utils.ColorUtils;
 import com.android.simplemusic.utils.MusicUtils;
 import com.android.simplemusic.utils.PermissionUtils;
 import com.android.simplemusic.utils.ThemeUtils;
-import com.android.simplemusic.vm.MainViewModel;
+import com.android.simplemusic.viewmodel.MainViewModel;
 import com.google.android.material.navigation.NavigationBarView;
 
 import org.greenrobot.eventbus.EventBus;
@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private MainViewModel viewModel;
     private ThemeUtils themeUtils;
+    private MenuItem menu_search;
     private MenuItem menu_settings;
     private NavHostFragment navHostFragment;
     private SharedPreferences sharedPreferences;
@@ -161,12 +162,18 @@ public class MainActivity extends AppCompatActivity {
                 if (color == Color.WHITE) {
                     decorView.setSystemUiVisibility(decorView.getSystemUiVisibility() | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
                     binding.toolbarMain.setTitleTextColor(Color.BLACK);
+                    if (menu_search != null) {
+                        menu_search.setIcon(R.drawable.baseline_search_black);
+                    }
                     if (menu_settings != null) {
                         menu_settings.setIcon(R.drawable.settings_black);
                     }
                 } else {
                     decorView.setSystemUiVisibility(decorView.getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
                     binding.toolbarMain.setTitleTextColor(Color.WHITE);
+                    if (menu_search != null) {
+                        menu_search.setIcon(R.drawable.baseline_search_white);
+                    }
                     if (menu_settings != null) {
                         menu_settings.setIcon(R.drawable.settings_white);
                     }
@@ -219,16 +226,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         if (PermissionUtils.checkStoragePermission(this)) {
             if (viewModel.getMusicList().getValue() == null || sharedPreferences.getBoolean("strong_scan_mode", false)) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        int minDuration = sharedPreferences.getInt("filter_short_audio", 0);
-                        int minSize = sharedPreferences.getInt("filter_small_audio", 0);
-                        List<Music> musicList = MusicUtils.getMusicData(MainActivity.this, minDuration, minSize);
-                        Log.i(TAG, "Got music data, size is: " + musicList.size());
-                        viewModel.setMusicList(musicList);
-                    }
-                }).start();
+                EventBus.getDefault().post(new MessageEvent(Definition.REQUEST_UPDATE_MUSIC_LIST));
             }
         } else { //请求权限
             PermissionUtils.requestStoragePermission(this, REQUEST_CODE);
@@ -335,6 +333,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
+        menu_search = menu.findItem(R.id.menu_search);
         menu_settings = menu.findItem(R.id.menu_settings);
         EventBus.getDefault().post(new MessageEvent(Definition.THEME));
         return super.onCreateOptionsMenu(menu);
@@ -343,7 +342,9 @@ public class MainActivity extends AppCompatActivity {
     // 菜单响应事件
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.menu_settings) {
+        if (item.getItemId() == R.id.menu_search) {
+            EventBus.getDefault().post(new MessageEvent(Definition.SEARCH));
+        } else if (item.getItemId() == R.id.menu_settings) {
             Intent intent_settings = new Intent(MainActivity.this, Settings.class);
             startActivity(intent_settings);
         }
@@ -354,76 +355,93 @@ public class MainActivity extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void handleEvent(MessageEvent messageEvent) {
         String message = messageEvent.getMessage();
-        switch (message) {
-            case Definition.SERVICE_CONNECTED:
-                Log.i(TAG, "Received Message SERVICE_CONNECTED");
-                if (messageEvent.getContent().equals("MainActivity")) {
-                    Music currentMusic = musicBinder.getService().getCurrentMusic();
-                    if (currentMusic != null) {
-                        binding.dockBar.setTextView1Text(currentMusic.getTitle());
-                        binding.dockBar.setTextView2Text(currentMusic.getArtist());
+        if (message != null) {
+            Log.i(TAG, "Received message: " + message);
+            switch (message) {
+                case Definition.SERVICE_CONNECTED:
+                    if (messageEvent.getContent().equals("MainActivity")) {
+                        Music currentMusic = musicBinder.getService().getCurrentMusic();
+                        if (currentMusic != null) {
+                            binding.dockBar.setTextView1Text(currentMusic.getTitle());
+                            binding.dockBar.setTextView2Text(currentMusic.getArtist());
+                        }
                     }
-                }
-                if (musicBinder.getService().isPlaying()) {
+                    if (musicBinder.getService().isPlaying()) {
+                        binding.dockBar.setImageButton2Drawable(ResourcesCompat.getDrawable(getResources(), R.drawable.pause_black, null));
+                    } else {
+                        binding.dockBar.setImageButton2Drawable(ResourcesCompat.getDrawable(getResources(), R.drawable.play_black, null));
+                    }
+                    break;
+                case Definition.REQUEST_UPDATE_MUSIC_LIST:
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            int minDuration = sharedPreferences.getInt("filter_short_audio", 0);
+                            int minSize = sharedPreferences.getInt("filter_small_audio", 0);
+                            List<Music> musicList = MusicUtils.getMusicData(MainActivity.this, minDuration, minSize);
+                            Log.i(TAG, "Got music data, size is: " + musicList.size());
+                            viewModel.setMusicList(musicList);
+                        }
+                    }).start();
+                    break;
+                case Definition.INIT:
+                    binding.dockBar.setImageViewBitmap(viewModel.getImage().getValue());
+                    binding.dockBar.setTextView1Text(musicBinder.getService().getCurrentMusic().getTitle());
+                    binding.dockBar.setTextView2Text(musicBinder.getService().getCurrentMusic().getArtist());
+                    break;
+                case Definition.PLAY:
                     binding.dockBar.setImageButton2Drawable(ResourcesCompat.getDrawable(getResources(), R.drawable.pause_black, null));
-                } else {
+                    break;
+                case Definition.PAUSE:
                     binding.dockBar.setImageButton2Drawable(ResourcesCompat.getDrawable(getResources(), R.drawable.play_black, null));
-                }
-                break;
-            case Definition.INIT:
-                Log.i(TAG, "Received Message INIT");
-                binding.dockBar.setTextView1Text(musicBinder.getService().getCurrentMusic().getTitle());
-                binding.dockBar.setTextView2Text(musicBinder.getService().getCurrentMusic().getArtist());
-                break;
-            case Definition.PLAY:
-                Log.i(TAG, "Received Message PLAY");
-                binding.dockBar.setImageButton2Drawable(ResourcesCompat.getDrawable(getResources(), R.drawable.pause_black, null));
-                break;
-            case Definition.PAUSE:
-                Log.i(TAG, "Received Message PAUSE");
-                binding.dockBar.setImageButton2Drawable(ResourcesCompat.getDrawable(getResources(), R.drawable.play_black, null));
-                break;
-            case Definition.COMPLETION:
-                Log.i(TAG, "Received Message COMPLETION");
-                if (!musicBinder.getService().isPlaying()) {
-                    binding.dockBar.setImageButton2Drawable(ResourcesCompat.getDrawable(getResources(), R.drawable.play_black, null));
-                }
-                break;
-            case Definition.PREV:
-                Log.i(TAG, "Received Message PREV");
-                if (viewModel.getIndex().getValue() != null && viewModel.getMusicList().getValue() != null) {
-                    int index = viewModel.getIndex().getValue();
-                    index = index - 1 >= 0 ? index - 1 : viewModel.getMusicList().getValue().size() - 1;
-                    Music music = viewModel.getMusicList().getValue().get(index);
-                    musicBinder.getService().Init(music);
-                    viewModel.setIndex(index);
-                } else {
-                    Log.i(TAG, "No music set.");
-                }
-                break;
-            case Definition.NEXT:
-                Log.i(TAG, "Received Message PREV");
-                if (viewModel.getIndex().getValue() != null && viewModel.getMusicList().getValue() != null) {
-                    int index = viewModel.getIndex().getValue();
-                    index = index + 1 < viewModel.getMusicList().getValue().size() ? index + 1 : 0;
-                    Music music = viewModel.getMusicList().getValue().get(index);
-                    musicBinder.getService().Init(music);
-                    viewModel.setIndex(index);
-                } else {
-                    Log.i(TAG, "No music set.");
-                }
-                break;
-            case Definition.THEME:
-                Log.i(TAG, "Received Message THEME_COLOR");
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        themeUtils.onThemeSettingChanged(MainActivity.this);
+                    break;
+                case Definition.COMPLETION:
+                    if (!musicBinder.getService().isPlaying()) {
+                        binding.dockBar.setImageButton2Drawable(ResourcesCompat.getDrawable(getResources(), R.drawable.play_black, null));
                     }
-                });
-                break;
-            default:
-                break;
+                    break;
+                case Definition.PREV:
+                    if (viewModel.getIndex().getValue() != null && viewModel.getMusicList().getValue() != null) {
+                        int index = viewModel.getIndex().getValue();
+                        index = index - 1 >= 0 ? index - 1 : viewModel.getMusicList().getValue().size() - 1;
+                        initMusic(index);
+                    } else {
+                        Log.i(TAG, "No music set.");
+                    }
+                    break;
+                case Definition.NEXT:
+                    if (viewModel.getIndex().getValue() != null && viewModel.getMusicList().getValue() != null) {
+                        int index = viewModel.getIndex().getValue();
+                        index = index + 1 < viewModel.getMusicList().getValue().size() ? index + 1 : 0;
+                        initMusic(index);
+                    } else {
+                        Log.i(TAG, "No music set.");
+                    }
+                    break;
+                case Definition.THEME:
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            themeUtils.onThemeSettingChanged(MainActivity.this);
+                        }
+                    });
+                    break;
+                default:
+                    break;
+            }
         }
+    }
+
+    // 初始化音乐
+    public boolean initMusic(int index) {
+        List<Music> musicList = viewModel.getMusicList().getValue();
+        if (musicList != null && index < musicList.size()) {
+            Music music = musicList.get(index);
+            viewModel.setIndex(index);
+            viewModel.setImage(MusicUtils.getAlbumImage(music.getPath()));
+            musicBinder.getService().Init(music);
+            return true;
+        }
+        return false;
     }
 }

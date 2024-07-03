@@ -106,7 +106,7 @@ public class MusicService extends Service {
             Log.i(TAG, "Music doesn't exist.");
             return false;
         }
-        Log.i(TAG, "Music Init + Path: " + music.getPath());
+        Log.i(TAG, "Init music from path " + music.getPath());
         currentState = Definition.INIT;
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
