@@ -68,7 +68,7 @@ public abstract class EqualizerDialog {
 
     public AlertDialog create() {
         builder = new AlertDialog.Builder(context);
-        builder.setIcon(R.mipmap.equalizer);
+        builder.setIcon(R.drawable.baseline_equalizer_black);
         builder.setTitle(context.getString(R.string.equalizer));
         // 根layout
         LinearLayout linearLayout = new LinearLayout(context);

@@ -141,6 +141,7 @@ public class MusicService extends Service {
             mediaPlayer.setDataSource(music.getPath());
             mediaPlayer.prepare();
         } catch (IOException e) {
+            Log.e(TAG, "Setting data source caused IOException.");
             e.printStackTrace();
         }
         EventBus.getDefault().post(new MessageEvent(Definition.INIT));

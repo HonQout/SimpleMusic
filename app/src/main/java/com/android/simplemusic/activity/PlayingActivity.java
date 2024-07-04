@@ -109,6 +109,23 @@ public class PlayingActivity extends AppCompatActivity {
         };
         // 绑定ViewModel
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
+        viewModel.getImage().observe(this, new Observer<Bitmap>() {
+            @Override
+            public void onChanged(Bitmap bitmap) {
+                if (bitmap != null) {
+                    binding.musicPic.setImageBitmap(bitmap);
+                } else {
+                    binding.musicPic.setImageDrawable(ResourcesCompat.getDrawable(getResources(),
+                            R.drawable.record, null));
+                }
+            }
+        });
+        if (viewModel.getImage().getValue() != null) {
+            binding.musicPic.setImageBitmap(viewModel.getImage().getValue());
+        } else {
+            binding.musicPic.setImageDrawable(ResourcesCompat.getDrawable(getResources(),
+                    R.drawable.record, null));
+        }
         // 绑定Music Service
         Intent intent = new Intent(getApplicationContext(), MusicService.class);
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
